@@ -18,7 +18,7 @@ int main()
 {
   fileModule::readNodesToLabel();
 
-  trie::foo();
+  // trie::foo();
 
   return 0;
 }
