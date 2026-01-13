@@ -49,7 +49,7 @@ namespace trie
     return detail::createNode('\0');
   }
 
-  void insertWord(TrieNode *node, std::string word, unsigned int nodeId)
+  void insertWord(TrieNode *node, std::string word, unsigned long nodeId)
   {
     TrieNode *currNode = node;
 
@@ -72,7 +72,7 @@ namespace trie
 
     currNode->isEndOfWord = 1;
 
-    unsigned int *newIdsTemp = (unsigned int *)realloc(currNode->nodeIds, sizeof(unsigned int) * (currNode->nodeIdsSize + 1));
+    unsigned long *newIdsTemp = (unsigned long *)realloc(currNode->nodeIds, sizeof(unsigned long) * (currNode->nodeIdsSize + 1));
     if (!newIdsTemp)
     {
       std::cerr << "error reallocating currNode->nodeIds\n";
@@ -93,19 +93,16 @@ namespace trie
     for (int currWordIndex = 0; currWordIndex < word.length(); currWordIndex++)
     {
       char currChar = word[currWordIndex];
-      std::cout << "currChar " << currChar << "\n";
       int currTrieCharIndex = detail::getTrieCharIndex(currChar);
-      std::cout << "currTrieCharIndex " << currTrieCharIndex << "\n";
 
       if (currTrieCharIndex == -1)
       {
         std::cout << "skipping unsupported char: " << currChar << "\n";
-        return;
+        continue;
       }
 
       if (currNode->next[currTrieCharIndex] == NULL)
       {
-        std::cout << "caiu no ruim \n";
         return;
       }
       currNode = currNode->next[currTrieCharIndex];

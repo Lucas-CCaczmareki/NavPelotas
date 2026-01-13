@@ -9,19 +9,19 @@ namespace trie
     struct TrieNode *next[ACCEPTED_SYMBOLS_AMOUNT];
     char val;
     int isEndOfWord;
-    unsigned int *nodeIds;
+    unsigned long *nodeIds;
     int nodeIdsSize;
   } typedef TrieNode;
 
   struct SearchResult
   {
     std::string label;
-    unsigned int *nodeIds;
+    unsigned long *nodeIds;
     int nodeIdsSize;
   };
 
   TrieNode *init();
-  void insertWord(TrieNode *trieRoot, std::string word, unsigned int nodeId);
+  void insertWord(TrieNode *trieRoot, std::string word, unsigned long nodeId);
   void search(TrieNode *node, std::string word, SearchResult results[], int *outCount);
   void destroy(TrieNode *root);
 }

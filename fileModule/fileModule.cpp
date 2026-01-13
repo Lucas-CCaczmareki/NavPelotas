@@ -4,7 +4,7 @@
 
 namespace fileModule
 {
-  void processNodesToLabel(trie::TrieNode *trieRoot, void (*cb)(trie::TrieNode *trieRoot, std::string word, unsigned int nodeId))
+  void processNodesToLabel(trie::TrieNode *trieRoot, void (*cb)(trie::TrieNode *trieRoot, std::string word, unsigned long nodeId))
   {
     std::ifstream inFile;
     inFile.open("./data/nodes_to_label.json");
@@ -31,6 +31,11 @@ namespace fileModule
         if (line[i] == ':')
         {
           isReadingLabel = 1;
+          // Skip space after :
+          if (i + 1 < line.length() && line[i + 1] == ' ')
+          {
+            i++;
+          }
           continue;
         }
 
@@ -49,7 +54,7 @@ namespace fileModule
       // each label has its payloads -> int nodes[] OR better std::vector<int> nodes;
       if (!(label.empty() && node.empty()))
       {
-        unsigned int nodeId = std::stoul(node); // TODO: try catch here cpp feature avoid outofrange or anything else
+        unsigned long nodeId = std::stoul(node); // TODO: try catch here cpp feature avoid outofrange or anything else
         cb(trieRoot, label, nodeId);
       }
     }

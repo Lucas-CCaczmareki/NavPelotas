@@ -30,27 +30,19 @@ int main()
 
   // autocomplete logic
   int searchResultsCount = 0;
-  trie::search(rootNode, "dez x laudelino g. ribeiro", results, &searchResultsCount);
-  std::cout << "results->label: " << results->label << "\n";
-  std::cout << "results->nodeIds[0]: " << results->nodeIds[0] << "\n";
-  std::cout << "searchResultsCount: " << searchResultsCount << "\n";
+  trie::search(rootNode, "do quilombo x do umbu", results, &searchResultsCount);
+  for (int i = 0; i < searchResultsCount; i++)
+  {
 
-
-  // while (searchResultsCount >= 0)
-  // {
-  //   std::cout << "searchResult label: " << results[searchResultsCount].label;
-  //   searchResultsCount--;
-  //   for (int i = 0; i < results[searchResultsCount].nodeIdsSize; i++)
-  //   {
-  //     std::cout << " -> nodeids: " << results[searchResultsCount].nodeIds[i];
-  //   }
-  //   std::cout << "\n";
-  // }
+    std::cout << " -> label: " << results[i].label << "\n";
+    std::cout << " -> nodeids: | ";
+    for (int j = 0; j < results[i].nodeIdsSize; j++)
+    {
+      std::cout << results[i].nodeIds[i] << " | ";
+    }
+    std::cout << "\n";
+  }
   // autocomplete logic
-
-  // std::cout << "rootNode->val " << rootNode->val << "\n";
-  // std::cout << "rootNode->isEndOfWord " << rootNode->isEndOfWord << "\n";
-
 
   return 0;
 }
