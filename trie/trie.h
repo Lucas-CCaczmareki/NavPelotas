@@ -7,6 +7,7 @@ namespace trie
   struct TrieNode
   {
     struct TrieNode *next[ACCEPTED_SYMBOLS_AMOUNT];
+    std::string word;
     char val;
     int isEndOfWord;
     unsigned long *nodeIds;
@@ -22,6 +23,6 @@ namespace trie
 
   TrieNode *init();
   void insertWord(TrieNode *trieRoot, std::string word, unsigned long nodeId);
-  void search(TrieNode *node, std::string word, SearchResult results[], int *outCount);
+  void search(TrieNode *node, std::string word, SearchResult results[], int *resultsCount);
   void destroy(TrieNode *root);
 }

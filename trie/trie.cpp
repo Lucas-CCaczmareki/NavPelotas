@@ -42,6 +42,27 @@ namespace trie
         return -1; // unsupported
       }
     }
+
+    void findAllPossibleEnds(trie::TrieNode *currNode, SearchResult results[], int *resultsCount)
+    {
+      if (currNode == NULL)
+      {
+        return;
+      }
+
+      if (currNode->isEndOfWord)
+      {
+        results[*resultsCount].label = currNode->word;
+        results[*resultsCount].nodeIds = currNode->nodeIds;
+        results[*resultsCount].nodeIdsSize = currNode->nodeIdsSize;
+        (*resultsCount)++;
+      }
+
+      for (int i = 0; i < trie::ACCEPTED_SYMBOLS_AMOUNT; i++)
+      {
+        findAllPossibleEnds(currNode->next[i], results, resultsCount);
+      }
+    }
   }
 
   TrieNode *init()
@@ -78,16 +99,17 @@ namespace trie
       std::cerr << "error reallocating currNode->nodeIds\n";
       exit(1);
     }
+    currNode->word = word;
     currNode->nodeIds = newIdsTemp;
     currNode->nodeIds[currNode->nodeIdsSize] = nodeId;
     currNode->nodeIdsSize++;
   }
 
-  void search(TrieNode *node, std::string word, SearchResult results[], int *outCount)
+  void search(TrieNode *node, std::string word, SearchResult results[], int *resultsCount)
   {
 
     std::cout << "searching for " + word + "\n";
-    *outCount = 0;
+    *resultsCount = 0;
 
     TrieNode *currNode = node;
     for (int currWordIndex = 0; currWordIndex < word.length(); currWordIndex++)
@@ -111,8 +133,8 @@ namespace trie
     // can be end of word (user typed full word)
     if (currNode->isEndOfWord)
     {
-      *outCount = 1;
-      results[0].label = word;
+      *resultsCount = 1;
+      results[0].label = currNode->word;
       results[0].nodeIds = currNode->nodeIds;
       results[0].nodeIdsSize = currNode->nodeIdsSize;
       return;
@@ -121,11 +143,8 @@ namespace trie
     {
       // can be prefix of 1 or more words
       // iterate until all possible ends and return on searchResults
+      detail::findAllPossibleEnds(currNode, results, resultsCount);
     }
-
-    // if(!currNode->isEndOfWord) {
-    //   return;
-    // }
   };
 
   void destroy(TrieNode *currNode)

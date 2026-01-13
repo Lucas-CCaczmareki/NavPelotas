@@ -6,19 +6,9 @@
 [X] - separate code with header files
 [X] - read label to node file line by line
   [X] - callback function pointer to process line/node
-[ ] - trie structure
-  [ ] - insert + prefix search
-  [ ] - delete?why?..
-[ ] - insert data on trie "lugarA x lugarB"
-  -- payload with nodes (id)
-[ ] - CLI autocomplete // remove it just for test.
+[X] - trie structure with necessary methods for autocomplete
 [ ] - GUI autocomplete
 */
-
-void fakeInsertOnTrie(std::string label, std::string node)
-{
-  std::cout << label + ":" + node + "\n";
-}
 
 int main()
 {
@@ -30,7 +20,7 @@ int main()
 
   // autocomplete logic
   int searchResultsCount = 0;
-  trie::search(rootNode, "do quilombo x do umbu", results, &searchResultsCount);
+  trie::search(rootNode, "do quilombo x", results, &searchResultsCount);
   for (int i = 0; i < searchResultsCount; i++)
   {
 
@@ -38,8 +28,9 @@ int main()
     std::cout << " -> nodeids: | ";
     for (int j = 0; j < results[i].nodeIdsSize; j++)
     {
-      std::cout << results[i].nodeIds[i] << " | ";
+      std::cout << results[i].nodeIds[j] << " | ";
     }
+    std::cout << "\n";
     std::cout << "\n";
   }
   // autocomplete logic
