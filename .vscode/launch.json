@@ -1,0 +1,18 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run C++ App",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/app",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "build",
+      "environment": [],
+      "externalConsole": true,
+      "MIMode": "gdb"
+    }
+  ]
+}

@@ -15,11 +15,6 @@
 #include <string>
 
 class Graph {
-private:
-    // A lista de adjacência em si.
-    // adj.push_back -> adiciona um nodo
-    // adj[0].push_back -> adiciona um caminho nesse nodo
-    std::vector<std::vector<struct Edge>> adj;
 
 public:
     // Estrutura das arestas.  
@@ -43,10 +38,16 @@ public:
     // Retorna a lista (vetor) de vizinhos da aresta selecionada
     // esse const ao final da assinatura significa que o método não pode alterar nenhum atributo da classe (.this)
     // isso é importante por que o neighbours funciona como um getter, ent n é pra ele modificar nada
-    const std::vector<struct Edge>& neighbours(int u) const;
+    const std::vector<Edge>& neighbours(int u) const;
 
     // Quantidade de nodos
     int size() const;
+
+private:
+    // A lista de adjacência em si.
+    // adj.push_back -> adiciona um nodo
+    // adj[0].push_back -> adiciona um caminho nesse nodo
+    std::vector<std::vector<Edge>> adj;
 
 };
 
