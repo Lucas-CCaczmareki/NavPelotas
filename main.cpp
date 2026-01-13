@@ -5,6 +5,7 @@
 /*
 [X] - separate code with header files
 [X] - read label to node file line by line
+  [X] - callback function pointer to process line/node
 [ ] - trie structure
   [ ] - insert + prefix search
   [ ] - delete?why?..
@@ -14,11 +15,17 @@
 [ ] - GUI autocomplete
 */
 
+void fakeInsertOnTrie(std::string label, std::string node)
+{
+  std::cout << label + ":" + node + "\n";
+}
+
 int main()
 {
-  fileModule::readNodesToLabel();
-
   // trie::foo();
+
+  fileModule::processNodesToLabel(fakeInsertOnTrie);
+
 
   return 0;
 }

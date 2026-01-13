@@ -3,7 +3,7 @@
 
 namespace fileModule
 {
-  void readNodesToLabel()
+  void processNodesToLabel(void (*cb)(std::string label, std::string node))
   {
     std::ifstream inFile;
     inFile.open("./data/nodes_to_label.json");
@@ -48,10 +48,7 @@ namespace fileModule
       // each label has its payloads -> int nodes[] OR better std::vector<int> nodes;
       if (!(label.empty() && node.empty()))
       {
-        std::cout << "node: " + node << "\n";
-        std::cout << "label: " + label << "\n";
-        std::cout << "\n";
-        std::cout << "\n";
+        cb(label, node);
       }
     }
 
