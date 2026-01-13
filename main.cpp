@@ -19,19 +19,27 @@ int main()
   trie::SearchResult results[300];
 
   // autocomplete logic
-  int searchResultsCount = 0;
-  trie::search(rootNode, "do quilombo x", results, &searchResultsCount);
-  for (int i = 0; i < searchResultsCount; i++)
-  {
+  while (true)
+  { // GUI
+    std::cout << "manda o bagulho ai: ";
+    std::string fodase;
+    std::cin >> fodase;
 
-    std::cout << " -> label: " << results[i].label << "\n";
-    std::cout << " -> nodeids: | ";
-    for (int j = 0; j < results[i].nodeIdsSize; j++)
+    // "para parar escreve 0" n vou fazer fodase
+
+    int searchResultsCount = 0;
+    trie::search(rootNode, fodase, results, &searchResultsCount);
+    for (int i = 0; i < searchResultsCount; i++)
     {
-      std::cout << results[i].nodeIds[j] << " | ";
+      std::cout << " -> label: " << results[i].label << "\n";
+      std::cout << " -> nodeids: | ";
+      for (int j = 0; j < results[i].nodeIdsSize; j++)
+      {
+        std::cout << results[i].nodeIds[j] << " | ";
+      }
+      std::cout << "\n";
+      std::cout << "\n";
     }
-    std::cout << "\n";
-    std::cout << "\n";
   }
   // autocomplete logic
 
