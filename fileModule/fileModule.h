@@ -2,5 +2,5 @@
 
 namespace fileModule
 {
-  void processNodesToLabel(void (*cb)(std::string label, std::string node));
+  void processNodesToLabel(trie::TrieNode *trieRoot, void (*cb)(trie::TrieNode *trieRoot, std::string word, unsigned int nodeId));
 }

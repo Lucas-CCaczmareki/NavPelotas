@@ -1,9 +1,10 @@
 #include <iostream>
+#include "../trie/trie.h"
 #include <fstream>
 
 namespace fileModule
 {
-  void processNodesToLabel(void (*cb)(std::string label, std::string node))
+  void processNodesToLabel(trie::TrieNode *trieRoot, void (*cb)(trie::TrieNode *trieRoot, std::string word, unsigned int nodeId))
   {
     std::ifstream inFile;
     inFile.open("./data/nodes_to_label.json");
@@ -48,7 +49,8 @@ namespace fileModule
       // each label has its payloads -> int nodes[] OR better std::vector<int> nodes;
       if (!(label.empty() && node.empty()))
       {
-        cb(label, node);
+        unsigned int nodeId = std::stoul(node); // TODO: try catch here cpp feature avoid outofrange or anything else
+        cb(trieRoot, label, nodeId);
       }
     }
 
