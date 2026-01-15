@@ -1,6 +1,5 @@
 // O .h é um header. Ele só diz pro .cpp que a gente ta chamando que essas funções dentro existem 
 
-
 // INCLUDE GUARD
 // Isso aqui confere se o graph_h já existe no momento que chamamos o cabeçalho
 // Se não existe, ele faz o define e cria, se já existe, ele ignora.
@@ -13,6 +12,7 @@
 
 #include <vector>   // vai ser usado pra montar a lista de adjacência
 #include <string>
+#include <unordered_map>
 
 class Graph {
 
@@ -30,7 +30,7 @@ public:
     // Construtor com o arquivo
     // const garante que o construtor não modifique a string. & evita que ele crie uma cópia local
     // & é um parâmetro de referência, serve pra passar exatamente o endereço do item enviado
-    Graph(const std::string& filename);
+    Graph(const std::string& nodes, const std::string& edges);
 
     // Adiciona aresta direcionada
     void addEdge(int u, int v, double weight);
@@ -48,6 +48,11 @@ private:
     // adj.push_back -> adiciona um nodo
     // adj[0].push_back -> adiciona um caminho nesse nodo
     std::vector<std::vector<Edge>> adj;
+
+    // A hashtable pra converter o id(long long) em um index(int)
+    // isso vai aumentar muito a eficiência de memória, pq não vai precisar ter bilhões de vetores vazios
+    // só pra usar o id com index direto.
+    std::unordered_map<long long, int> idToIndex;   // index nesse caso é o índice do nodo na lista de adjacência
 
 };
 
