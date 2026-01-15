@@ -4,6 +4,10 @@
 
 namespace trie
 {
+    struct Trie {
+        trie::TrieNode* root;
+    };
+
   namespace detail
   {
     TrieNode *createNode(char nodeChar)

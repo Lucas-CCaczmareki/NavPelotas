@@ -1,19 +1,35 @@
-QT = core
+QT -= gui
+QT += core
+CONFIG += c++17 console
+CONFIG -= app_bundle
 
-CONFIG += c++17 cmdline
+INCLUDEPATH += include
 
-# You can make your code fail to compile if it uses deprecated APIs.
-# In order to do so, uncomment the following line.
-#DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
+# Adicione o fileModule aqui
+SOURCES += src/main.cpp \
+           src/Graph.cpp \
+           src/trie.cpp \
+           fileModule/fileModule.cpp
 
-SOURCES += \
-        main.cpp
+HEADERS += include/Graph.h \
+           include/trie.h \
+           include/json.hpp \
+           fileModule/fileModule.h
 
-# Default rules for deployment.
-qnx: target.path = /tmp/$${TARGET}/bin
-else: unix:!android: target.path = /opt/$${TARGET}/bin
-!isEmpty(target.path): INSTALLS += target
+# Cópia dos JSONs (Mantenha isso, é vital)
+COPY_FILES += $$PWD/data/*.json
+win32 {
+    copy_files.commands = $(COPY_DIR) \"$$shell_path($$PWD/data)\" \"$$shell_path($$OUT_PWD/data)\"
+}
+unix {
+    copy_files.commands = mkdir -p $$OUT_PWD/data && cp $$PWD/data/*.json $$OUT_PWD/data
+}
+QMAKE_EXTRA_TARGETS += copy_files
+POST_TARGETDEPS += copy_files
 
-HEADERS += \
-    contratos.h \
-    tradutor.h
+# --- Isso faz os arquivos aparecerem na árvore do projeto (apenas visual) ---
+DISTFILES += \
+    data/edges.json \
+    data/nodes.json \
+    data/label_to_nodes.json \
+    data/nodes_to_label.json

@@ -1,6 +1,7 @@
 #include <iostream>
-#include "../trie/trie.h"
+#include "../include/trie.h"
 #include <fstream>
+#include "fileModule.h"
 
 namespace fileModule
 {

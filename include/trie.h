@@ -1,5 +1,6 @@
 #pragma once // include only once same header
 
+#include <string>
 namespace trie
 {
   constexpr int ACCEPTED_SYMBOLS_AMOUNT = 40; // 26abc, 10 digits, 4 symbols (- space . ')
