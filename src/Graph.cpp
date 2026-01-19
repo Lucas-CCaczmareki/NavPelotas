@@ -120,6 +120,7 @@ int Graph::size() const {
     return adj.size();
 }
 
+// Retorna quantas arestas o grafo tem
 int Graph::totalEdges() const {
     int edges = 0;
 
