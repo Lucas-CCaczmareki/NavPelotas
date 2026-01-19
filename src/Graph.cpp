@@ -53,14 +53,24 @@ Graph::Graph(const std::string& nodes, const std::string& edges) {
     // =============================================
     edges_file >> j_file;
 
+    // Testando tamanho
+    // int n_edgesFile = 0;
+    // int n_edgesGraph = 0; 
+
     // Primeiro precisamos descobrir o sentido da via
     for(auto& edge : j_file) {
 
         // O value trata caso o campo esteja vazio. Ele atriu false como padrão
         bool oneway = edge["data"].value("oneway", false);
-        
         double length = edge["data"].value("length", INT_MAX); //atribui um numero gigante caso o valor n seja dado, pra n usar a aresta mesmo
 
+        // Contando tamanho pra testar
+        // n_edgesFile++;
+        // if (oneway) {
+        //     n_edgesGraph += 1;
+        // } else {
+        //     n_edgesGraph += 2;
+        // }
 
         // Ou seja, se a via é de mão dupla. Vai e volta
         if(!oneway) {
@@ -84,6 +94,7 @@ Graph::Graph(const std::string& nodes, const std::string& edges) {
             }
         }
     }
+    // std::cout << "Grafo finalizado. Edges no arquivo: " << n_edgesFile << "\nEdges no grafo: " << n_edgesGraph << "\n\n";
 }
 
 // Adiciona uma edge à um node.
@@ -107,4 +118,15 @@ const std::vector<Graph::Edge>& Graph::neighbours(int u) const {
 // Retorna quantos nodes nosso grafo tem
 int Graph::size() const {
     return adj.size();
+}
+
+int Graph::totalEdges() const {
+    int edges = 0;
+
+    // Em tese isso aqui vai percorrer todos nodes e ir somando o numero de arestas
+    for(auto& node : adj) {
+        edges += node.size();
+    }
+
+    return edges;
 }

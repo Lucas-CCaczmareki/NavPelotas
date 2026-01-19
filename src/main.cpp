@@ -11,9 +11,15 @@ int main() {
     
     try {
         Graph g("data/nodes.json", "data/edges.json"); //aqui ele vai criar o grafo, vamo ver se executa pelo menos
+        
+        // num nodes
+        std::cout << g.size() << "\n";  // isso ta ok, coerente com o arquivo
+        std::cout << g.totalEdges() << "\n";
+
+
+
 
     } catch(const std::exception& e) {
         std::cerr << e.what() << '\n';
     }
-
 }

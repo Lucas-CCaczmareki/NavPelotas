@@ -43,6 +43,9 @@ public:
     // Quantidade de nodos
     int size() const;
 
+    // Quantidade de arestas
+    int totalEdges() const;
+
 private:
     // A lista de adjacência em si.
     // adj.push_back -> adiciona um nodo
