@@ -1,5 +1,6 @@
 #include "Dijkstra.h"
 #include <algorithm>
+#include <iostream>
 
 // Construtor que recebe um grafo por referência
 // Referência é tipo um "apelido" pra um objeto que já existe
@@ -7,6 +8,7 @@
 
 Dijkstra::Dijkstra(const Graph& g, int origin) :    // esses ':' representam o inicio da initializer list 
     // OBS: A initializer list é obrigatória pra atributos que são referência
+    // OBS: A ordem da initializer list deve bater com a ordem de declaração no .h
     graph(g),   // o graph nosso atributo de referência pro grafo, recebe o grafo como parâmetro e guarda   
     
     // Metadados
@@ -15,23 +17,78 @@ Dijkstra::Dijkstra(const Graph& g, int origin) :    // esses ':' representam o i
     hasRun(false),
 
     // Inicializa os vetores (chama os construtores(size, value))
-    dist(numNodes, INT_MAX),    // cria numNodes campos e seta com INT_MAX
-    prev(numNodes, {-1, -1})    // cria numNodes e seta com valores que representam ids invalidos
-
+    dist(numNodes, INT_MAX),     // cria numNodes campos e seta com INT_MAX
+    prev(numNodes, {-1, -1}),    // cria numNodes campos e seta com valores que representam ids invalidos
+    explored(numNodes, false)    // cria numNodes campos e seta todos com false
 {
-    dist[origin] = 0;   // atualiza esse valor pra lista de distâncias já ficar válida
+    dist[origin] = 0;            // atualiza esse valor pra lista de distâncias já ficar válida
+    // explored[origin] = true;
 }
 
 // Função pra executar o algoritmo
-void Dijkstra::execute() {
-    // Recria a priority queue pra zerar ela entre execuções
-    pq = std::priority_queue<
-        pqNode,
-        std::vector<pqNode>,
-        std::greater<pqNode>
-    >();
+/*
+// 2-step process:
+    // ---------------------------------------------------------------------------------------------------------
+    // 1 - Update estimates
+    // Vai conferir todas as arestas saindo do nodo atual e se o caminho até o próximo nodo
+    // (considerando a soma do caminho pra chegar até o nodo atual, o custo acumulatório no caso)
+    // for menor que o caminho registrado no dist[cur], atualiza ele com esse valor.
+    // ---------------------------------------------------------------------------------------------------------
 
-    // Continua a escrever a lógica do dijkstra aqui depois
+    // ---------------------------------------------------------------------------------------------------------
+    // 2 - choose next vertex
+    // Aqui a gente vai pra próxima cidade INEXPLORADA com o MENOR caminho pra lá 
+    // (é aqui que a priority queue com heap entra pra eficiência, a gente evita de conferir todo o vetor de vizinhos)
+    
+    // ai quando a gente escolhe esse vértice e nos movemos pra cá, atualiza o custo acumulatório de caminho com 
+    // o valor da aresta que usamos pra chegar aqui, e ai loopa o passo 1, de atualizar estimativas
+    // ---------------------------------------------------------------------------------------------------------
+
+    // E no meio desses processos todos, lembra de atualizar os valores das outras estruturas como o prev[]
+
+*/
+void Dijkstra::execute() {
+    std::cout << "executing dijkstra...\n";
+    
+    // Recria a priority queue pra zerar ela entre execuções
+    pq = std::priority_queue<pqNode>();
+    pq.push({origin, 0});
+    dist[origin] = 0;
+
+    while(!pq.empty()) {
+
+        // Choose next vertex (2nd step)
+        pqNode cur_node = pq.top();
+        pq.pop();
+
+        // Ignora um caminho que já é certamente pior
+        if (cur_node.path_weight > dist[cur_node.id]) continue;
+
+        // Ignora entradas antigas e inválidas da pq
+        if (explored[cur_node.id]) continue;
+
+        // Marca o nodo atual que entramos como explorado
+        explored[cur_node.id] = true;
+
+        int i = 0;
+        // Uptade estimates (1st step)
+        for(auto& edge : graph.neighbours(cur_node.id)) {
+            // se o peso desse caminho é menor que a menor distância conhecida, atualiza
+            if((dist[cur_node.id] + edge.weight) < dist[edge.to]) {
+                // Dist mantém a soma do menor caminho da origem ate o idx dela atualizado
+                dist[edge.to] = dist[cur_node.id] + edge.weight;
+                
+                // atualiza o prev
+                prev[edge.to].node = cur_node.id;
+                prev[edge.to].edgeIdx = i;
+
+                // Coloca os vizinhos que tem um caminho melhor na priority queue
+                pq.push({edge.to, (dist[cur_node.id] + edge.weight)});
+            }
+            i++; //atualiza o indice da edge
+        }
+    }
+    std::cout << "dijkstra executed.\n";
 }
 
 // Getter para o valor do menor caminho entre A e B
@@ -40,24 +97,37 @@ double Dijkstra::getDistance(int destination) {
 }
 
 // Getter para reconstruir o menor caminho entre A e B
-std::vector<Dijkstra::Prev> Dijkstra::getPath(int destination) {
+/*
     // Lógica pra remontar o caminho:
     // Faz um loop começando do prev[destino] e vai adicionando os nodos até o valor de prev ser o origem
     // Ai pega o vetor e inverte
+*/
+std::vector<Dijkstra::Prev> Dijkstra::getPath(int destination) {
+    // Proteção: destino inalcançável
+    if (dist[destination] == INT_MAX) return {};
+
+    // prev tem id node anterior, id da aresta que usou pra chegar no node atual
 
     // Monta o vetor de retorno
     std::vector<Dijkstra::Prev> path;
 
     int cur = destination;
+
     // Se o id do nodo por onde veio ainda é diferente 
     while(cur != origin) {
         path.push_back(prev[cur]);     // coloca o nodo no caminho
-        cur = prev[cur].node;     // vai um nodo pra trás no caminho
+        cur = prev[cur].node;          // vai um nodo pra trás no caminho
     }
 
     // Inverte o vetor e retorna
     // O reverse inverte num intervalo [inicio, fim)
     std::reverse(path.begin(), path.end());
+
+    // vou fazer ele printar o path só pra testes aqui por enquanto q vai ser mais fácil
+    for(auto& path_node : path) {
+        std::cout << path_node.node << ", ";
+    }
+    std::cout << destination << "\n";
 
     return path;
 }

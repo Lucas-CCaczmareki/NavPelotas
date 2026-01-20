@@ -10,11 +10,21 @@
 class Dijkstra {
     // Só pra diminuir o tamanho do bag q eu tenho que escrever
     // using AdjList = std::vector<std::vector<Graph::Edge>>;
-    
-    // basicamente uma struct com 2 elementos e tipos adaptáveis
-    using pqNode = std::pair<double, int>; // weight, id
 
 public:
+    // basicamente uma struct com 2 elementos e tipos adaptáveis
+    struct pqNode {
+        int id;
+        double path_weight;
+
+        // Isso aqui vai definir o comportamento do operador < quando eu comparar 2 pqNode
+        bool operator<(const pqNode& other) const {
+            // if: node é < que esse outro.node? 
+            // return: ele é menor (menos prioridade) se o peso (path_weight) dele for maior
+            return path_weight > other.path_weight;
+        }
+    };
+
     struct Prev {
         int node;
         int edgeIdx; //index na lista de adjacência da aresta pela qual veio .
@@ -36,17 +46,13 @@ public:
     void setOrigin(int origin);
 
 private:
-    // Priority queue usando heap para escolher o próximo nodo sem percorrer todos para escolher o melhor
-    // Definindo o comporatamento da nossa priority queue (a padrão é max-heap, e o dijkstra precisa da minheap)
-    std::priority_queue<
-        pqNode,                 // tipo do elemento da pq
-        std::vector<pqNode>,    // container, como a heap é implementada internamente. Vector é o padrão
-        
-        // Esse campo aqui é chamado de compare(a, b), ele retorna true se A tem MENOS prioridade que B
-        // Colocando greater ele compara se a > b pra decidir a prioridade. Ou seja:
-        // Se A > B, ele retorna true, que significa que A tem MENOS prioridade que B e B (o menor) vai pro topo.
-        std::greater<pqNode>    // regra de ordenação
-    > pq;
+    // Guardando o grafo como referência (pra n passar ela toda hora)
+    const Graph& graph;
+
+    // Metadados
+    int numNodes;
+    int origin;
+    bool hasRun;    // indica se o algoritmo já rodou para a última origin inserida
 
     // Vetor para guardar as menores distâncias conhecidas 
     std::vector<double> dist;
@@ -54,14 +60,17 @@ private:
     // Vetor para reconstruir o menor caminho
     std::vector<Prev> prev;
 
-    // Metadados
-    int numNodes;
-    bool hasRun;    // indica se o algoritmo já rodou para a última origin inserida
-    int origin;
-    // int destiny; // roda com a origem, dps entra com o destino pra retorno. Não é necessário em teoria
+    // Vetor pra conferir se as cidades já foram exploradas
+    std::vector<bool> explored;
 
-    // Guardando o grafo como referência (pra n passar ela toda hora)
-    const Graph& graph;
+    // Priority queue usando heap para escolher o próximo nodo sem percorrer todos para escolher o melhor
+    // Definindo o comporatamento da nossa priority queue (a padrão é max-heap, e o dijkstra precisa da minheap)
+    // -----------------------------------------------------------------------------------------------------------
+    // A priority_queue tem 3 parâmetros: tipo de elemento, container, comparação entre os elementos
+    // Aqui a gente especifica só o tipo do elemento(pqNode) e a pq vai usar a comparação padrão que é less '<'
+    // Como nossa struct pqNode tem uma definição de comportamento pro operator <, ela vai funcionar como min-heap
+    // -----------------------------------------------------------------------------------------------------------
+    std::priority_queue<pqNode> pq;
 };
 
 #endif
