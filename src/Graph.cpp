@@ -39,7 +39,8 @@ Graph::Graph(const std::string& nodes, const std::string& edges) {
         // index = último espaço vazio da lista de adj. Escrever assim só pra ficar mais claro.
         // e desse jeito eu não preciso controlar o i++ por fora também.
         int i = adj.size();         
-        idToIndex[id] = i;          // isso aqui faz o id sempre mapear pro index i, na mesma ordem que eles tão escrito no json
+        idToIndex[id] = i;              // isso aqui faz o id sempre mapear pro index i, na mesma ordem que eles tão escrito no json
+        indexToId.push_back(id);        // e isso aqui guarda o caminho contrário
 
         // Cria um nodo
         // O emplace back vai criar o objeto (std::vector<Edge>) dentro do vetor de vetores adj.
@@ -62,7 +63,7 @@ Graph::Graph(const std::string& nodes, const std::string& edges) {
 
         // O value trata caso o campo esteja vazio. Ele atriu false como padrão
         bool oneway = edge["data"].value("oneway", false);
-        double length = edge["data"].value("length", INT_MAX); //atribui um numero gigante caso o valor n seja dado, pra n usar a aresta mesmo
+        double length = edge["data"].value("length", 1e18); //atribui um numero gigante caso o valor n seja dado, pra n usar a aresta mesmo
 
         // Contando tamanho pra testar
         // n_edgesFile++;
@@ -130,4 +131,12 @@ int Graph::totalEdges() const {
     }
 
     return edges;
+}
+
+int Graph::getIndexFromId(long long id) const {
+    return idToIndex.at(id);
+}
+
+long long Graph::getIdFromIndex(int idx) const {
+    return indexToId.at(idx);
 }

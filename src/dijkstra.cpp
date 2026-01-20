@@ -74,7 +74,21 @@ void Dijkstra::execute() {
         // Uptade estimates (1st step)
         for(auto& edge : graph.neighbours(cur_node.id)) {
             // se o peso desse caminho é menor que a menor distância conhecida, atualiza
+            // OBS: Se houver mais de um caminho ótimo e eu quiser garantir que ele escolha sempre o ultimo caminho
+            // é só trocar a comparação pra <=. Qual ele escolhe vai depender disso e outros fatores, mas é arbitrário, sempre vai vir o mesmo
             if((dist[cur_node.id] + edge.weight) < dist[edge.to]) {
+                
+                // DEBUG
+                // std::cout
+                //     << "edge "
+                //     << graph.getIdFromIndex(cur_node.id)
+                //     << " -> "
+                //     << graph.getIdFromIndex(edge.to)
+                //     << " | weight = "
+                //     << edge.weight
+                //     << "\n";
+
+                
                 // Dist mantém a soma do menor caminho da origem ate o idx dela atualizado
                 dist[edge.to] = dist[cur_node.id] + edge.weight;
                 
@@ -125,9 +139,9 @@ std::vector<Dijkstra::Prev> Dijkstra::getPath(int destination) {
 
     // vou fazer ele printar o path só pra testes aqui por enquanto q vai ser mais fácil
     for(auto& path_node : path) {
-        std::cout << path_node.node << ", ";
+        std::cout << graph.getIdFromIndex(path_node.node) << ", ";
     }
-    std::cout << destination << "\n";
+    std::cout << graph.getIdFromIndex(destination) << "\n";
 
     return path;
 }

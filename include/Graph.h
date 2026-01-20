@@ -46,6 +46,12 @@ public:
     // Quantidade de arestas
     int totalEdges() const;
 
+    // Getter pra transformar id num index
+    int getIndexFromId(long long id) const;
+
+    // Getter pra transformar index num id
+    long long getIdFromIndex(int idx) const;
+
 private:
     // A lista de adjacência em si.
     // adj.push_back -> adiciona um nodo
@@ -57,6 +63,8 @@ private:
     // só pra usar o id com index direto.
     std::unordered_map<long long, int> idToIndex;   // index nesse caso é o índice do nodo na lista de adjacência
 
+    // Outra hashtable pra conseguir fazer o caminho contrário
+    std::vector<long long> indexToId;
 };
 
 #endif
