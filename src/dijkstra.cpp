@@ -17,7 +17,7 @@ Dijkstra::Dijkstra(const Graph& g, int origin) :    // esses ':' representam o i
     hasRun(false),
 
     // Inicializa os vetores (chama os construtores(size, value))
-    dist(numNodes, INT_MAX),     // cria numNodes campos e seta com INT_MAX
+    dist(numNodes, 1e18),     // cria numNodes campos e seta com 1e18
     prev(numNodes, {-1, -1}),    // cria numNodes campos e seta com valores que representam ids invalidos
     explored(numNodes, false)    // cria numNodes campos e seta todos com false
 {
@@ -118,7 +118,7 @@ double Dijkstra::getDistance(int destination) {
 */
 std::vector<Dijkstra::Prev> Dijkstra::getPath(int destination) {
     // Proteção: destino inalcançável
-    if (dist[destination] == INT_MAX) return {};
+    if (dist[destination] == 1e18) return {};
 
     // prev tem id node anterior, id da aresta que usou pra chegar no node atual
 
