@@ -16,10 +16,10 @@ int main() {
         Graph g("data/nodes.json", "data/edges.json");
         
         // Origem com múltiplos IDs (exemplo: joao gomes nogueira x rotula)
-        std::vector<long long> origem_ids = {12150999946LL, 12150999960LL};
+        std::vector<long long> origem_ids = {1675174988};
         
         // Destino com múltiplos IDs (bento goncalves x goncalves chaves)
-        std::vector<long long> destino_ids = {1675174827LL, 1675174830LL};
+        std::vector<long long> destino_ids = {1675174980};
         
         // Variáveis para armazenar o melhor resultado global
         double menor_distancia = std::numeric_limits<double>::max();
