@@ -1,52 +1,107 @@
+// OBS: O main foi feito usando IA pra testar os caminhos por enquanto e conseguir ligar com
+// os múltiplos ids que podem vir da trie
+
 #include <iostream>
-#include <fstream> //provavelmente pra acessar files
+#include <fstream>
 #include <vector>
 #include <string>
-// #include "Graph.h"
+#include <limits>
+#include "Graph.h"
 #include "json.hpp"
 #include <unordered_map>
-
+#include "Dijkstra.h"
 
 int main() {
-    using json = nlohmann::json; //só pra escrever menos coisa. Faz json ser uma keywork que é nlohmann::json
-    
-    json j_file;
-    std::ifstream file("data/nodes.json");
-
-    if(!file.is_open()) {
-        std::cout << "Erro ao abrir o arquivo!\n";
-        exit(1);
-    }   
-
-    // Joga o fluxo de entrada de caracteres do arquivo pro tipo json da biblioteca.
-    // Esse tipo se vira automaticamente pra saber oq tem no json, se um array ou objeto, ou array de objetos etc.
-    // A partir daqui o j_file é representado de acordo com a estrutura dele, e eu acesso como array de objetos
-        // no caso do nodes.json
-    file >> j_file; 
-
-    // Cria uma hashtable
-    std::unordered_map<long long, int> idToIndex;
-    
-    // indica pra hashtable q eu vou botar +- esse tanto de elementos
-    // isso evita várias realocações durante um loop, por exemplo. É tipo aquele tamanho inicial quando eu implementei
-    idToIndex.reserve(j_file.size()); 
-
-
-    int i = 0;
-    for(auto& node : j_file) {
-        // A ordem dos números do nodo pra mim não interessa. Me interessa que o id vire um número pequeno.
-        long long id = node["id"];
-        idToIndex[id] = i;  //isso aqui faz o id sempre mapear pro index i, na mesma ordem que eles tão escrito no json
-
-        std::cout << "ID: " << id << "\tINDEX: " << idToIndex[id] << "\n";
-
-        // faz só pros 10 primeiros pra testar
-        i++;
-        if(i >= 10) {
-            break;
+    try {
+        Graph g("data/nodes.json", "data/edges.json");
+        
+        // Origem com múltiplos IDs (exemplo: joao gomes nogueira x rotula)
+        std::vector<long long> origem_ids = {1675174988};
+        
+        // Destino com múltiplos IDs (bento goncalves x goncalves chaves)
+        std::vector<long long> destino_ids = {1675174980};
+        
+        // Variáveis para armazenar o melhor resultado global
+        double menor_distancia = std::numeric_limits<double>::max();
+        int melhor_origem_idx = -1;
+        int melhor_destino_idx = -1;
+        long long melhor_origem_id = -1;
+        long long melhor_destino_id = -1;
+        Dijkstra* melhor_dj = nullptr;
+        
+        std::cout << "Testando todas combinações de origem/destino:\n";
+        std::cout << "==============================================\n\n";
+        
+        // Testa todas combinações de origem x destino
+        for (size_t i = 0; i < origem_ids.size(); i++) {
+            try {
+                int o = g.getIndexFromId(origem_ids[i]);
+                
+                // Cria e executa Dijkstra para essa origem
+                Dijkstra* dj = new Dijkstra(g, o);
+                dj->execute();
+                
+                std::cout << "Origem ID " << origem_ids[i] << ":\n";
+                
+                // Testa cada destino
+                for (size_t j = 0; j < destino_ids.size(); j++) {
+                    try {
+                        int d = g.getIndexFromId(destino_ids[j]);
+                        double dist = dj->getDistance(d);
+                        
+                        std::cout << "  -> Destino ID " << destino_ids[j] 
+                                  << ": " << dist << "m\n";
+                        
+                        // Atualiza se for o menor caminho
+                        if (dist < menor_distancia) {
+                            // Deleta o Dijkstra anterior se existir
+                            if (melhor_dj != nullptr && melhor_dj != dj) {
+                                delete melhor_dj;
+                            }
+                            
+                            menor_distancia = dist;
+                            melhor_origem_idx = o;
+                            melhor_destino_idx = d;
+                            melhor_origem_id = origem_ids[i];
+                            melhor_destino_id = destino_ids[j];
+                            melhor_dj = dj;
+                        }
+                    } catch(const std::exception& e) {
+                        std::cout << "  -> Destino ID " << destino_ids[j] 
+                                  << ": ERRO\n";
+                    }
+                }
+                
+                // Se esse Dijkstra não é o melhor, deleta
+                if (dj != melhor_dj) {
+                    delete dj;
+                }
+                
+                std::cout << "\n";
+                
+            } catch(const std::exception& e) {
+                std::cout << "Origem ID " << origem_ids[i] << ": ERRO - " 
+                          << e.what() << "\n\n";
+            }
         }
+        
+        // Imprime o melhor resultado
+        std::cout << "==============================================\n";
+        std::cout << "MELHOR CAMINHO ENCONTRADO:\n";
+        std::cout << "==============================================\n";
+        std::cout << "Origem ID: " << melhor_origem_id << "\n";
+        std::cout << "Destino ID: " << melhor_destino_id << "\n";
+        std::cout << "Distancia: " << menor_distancia << "m\n\n";
+        std::cout << "Caminho:\n";
+        
+        if (melhor_dj != nullptr) {
+            melhor_dj->getPath(melhor_destino_idx);
+            delete melhor_dj;
+        }
+        
+    } catch(const std::exception& e) {
+        std::cerr << "Erro: " << e.what() << '\n';
     }
-
     
-
+    return 0;
 }

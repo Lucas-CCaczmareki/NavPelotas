@@ -77,3 +77,125 @@
     }
 
     return 0;
+
+
+    using json = nlohmann::json; //só pra escrever menos coisa. Faz json ser uma keywork que é nlohmann::json
+    
+    json j_file;
+    std::ifstream file("data/nodes.json");
+
+    if(!file.is_open()) {
+        std::cout << "Erro ao abrir o arquivo!\n";
+        exit(1);
+    }   
+
+    // Joga o fluxo de entrada de caracteres do arquivo pro tipo json da biblioteca.
+    // Esse tipo se vira automaticamente pra saber oq tem no json, se um array ou objeto, ou array de objetos etc.
+    // A partir daqui o j_file é representado de acordo com a estrutura dele, e eu acesso como array de objetos
+        // no caso do nodes.json
+    file >> j_file; 
+
+    // Cria uma hashtable
+    std::unordered_map<long long, int> idToIndex;
+    
+    // indica pra hashtable q eu vou botar +- esse tanto de elementos
+    // isso evita várias realocações durante um loop, por exemplo. É tipo aquele tamanho inicial quando eu implementei
+    idToIndex.reserve(j_file.size()); 
+
+
+    int i = 0;
+    for(auto& node : j_file) {
+        // A ordem dos números do nodo pra mim não interessa. Me interessa que o id vire um número pequeno.
+        long long id = node["id"];
+        idToIndex[id] = i;  //isso aqui faz o id sempre mapear pro index i, na mesma ordem que eles tão escrito no json
+
+        std::cout << "ID: " << id << "\tINDEX: " << idToIndex[id] << "\n";
+
+        // faz só pros 10 primeiros pra testar
+        i++;
+        if(i >= 10) {
+            break;
+        }
+    }
+
+
+
+    dijkstra testa
+    Graph g(7);
+    
+    g.addEdge(0, 2, 3);
+    g.addEdge(2, 0, 3);
+
+    g.addEdge(0, 5, 2);
+    g.addEdge(5, 0, 2);
+
+    g.addEdge(2, 5, 2);
+    g.addEdge(5, 2, 2);
+
+    g.addEdge(2, 4, 1);
+    g.addEdge(4, 2, 1);
+    
+    g.addEdge(5, 4, 3);
+    g.addEdge(4, 5, 3);
+
+    g.addEdge(2, 3, 4);
+    g.addEdge(3, 2, 4);
+
+    g.addEdge(3, 1, 1);
+    g.addEdge(1, 3, 1);
+
+    g.addEdge(4, 1, 2);
+    g.addEdge(1, 4, 2);
+
+    g.addEdge(5, 1, 6);
+    g.addEdge(1, 5, 6);
+
+    g.addEdge(5, 6, 5);
+    g.addEdge(6, 5, 5);
+
+    g.addEdge(1, 6, 2);
+    g.addEdge(6, 1, 2);
+
+    Dijkstra dj(g, 0);
+
+    dj.execute();
+    
+    // Ta errado
+    std::cout << "Distance from A0 to B1: "<< dj.getDistance(1) << "\n";
+
+    dj.getPath(1);
+
+
+    #include <iostream>
+#include <fstream> //provavelmente pra acessar files
+#include <vector>
+#include <string>
+#include "Graph.h"
+#include "json.hpp"
+#include <unordered_map>
+#include "Dijkstra.h"
+
+int main() {
+    
+    try {
+        Graph g("data/nodes.json", "data/edges.json"); //aqui ele vai criar o grafo, vamo ver se executa pelo menos
+        
+        long long origem = 1675174988;
+        long long destino = 1675174986;
+
+        int o = g.getIndexFromId(origem);
+        int d = g.getIndexFromId(destino);
+
+        Dijkstra dj(g, o);
+        dj.execute();
+
+        std::cout << dj.getDistance(d) << "\n";
+        dj.getPath(d);
+
+
+    } catch(const std::exception& e) {
+        std::cerr << e.what() << '\n';
+    }
+
+    return 0;
+}
