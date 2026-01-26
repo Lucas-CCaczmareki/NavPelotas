@@ -9,11 +9,13 @@ INCLUDEPATH += include
 SOURCES += src/main.cpp \
            src/Graph.cpp \
            src/trie.cpp \
+           src/dijkstra.cpp \
            fileModule/fileModule.cpp
 
 HEADERS += include/Graph.h \
            include/trie.h \
            include/json.hpp \
+           include/dijkstra.h \
            fileModule/fileModule.h
 
 # Cópia dos JSONs (Mantenha isso, é vital)
@@ -29,7 +31,9 @@ POST_TARGETDEPS += copy_files
 
 # --- Isso faz os arquivos aparecerem na árvore do projeto (apenas visual) ---
 DISTFILES += \
-    data/edges.json \
-    data/nodes.json \
-    data/label_to_nodes.json \
-    data/nodes_to_label.json
+# Isso faz TODOS os arquivos da pasta data aparecerem na árvore do projeto
+DISTFILES += \
+    data/*.json \
+    data/*.docx \
+    README.md \
+    cppexamples.txt
