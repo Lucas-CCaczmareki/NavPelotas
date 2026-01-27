@@ -7,6 +7,8 @@
 Graph::Graph(int numVertices) {
     // Cria todos os vértices (sem nenhuma conexão ainda)
     adj.resize(numVertices);
+    // Redimensiona o vetor de coordenadas com 0.0 pra evitar crash
+    nodeCoords.resize(numVertices, {0.0,0.0});
 }
 
 // Construtor com arquivo
@@ -14,6 +16,16 @@ Graph::Graph(const std::string& nodes, const std::string& edges) {
     nlohmann::json j_file;
     std::ifstream nodes_file(nodes);
     std::ifstream edges_file(edges);
+    // Se falhar (ex: rodando de dentro da pasta debug), tenta voltar um nível
+    if (!nodes_file.is_open()) {
+        nodes_file.clear(); // Limpa o estado de erro
+        nodes_file.open("../" + nodes); // Tenta ../data/nodes.json
+    }
+
+    if (!edges_file.is_open()) {
+        edges_file.clear();
+        edges_file.open("../" + edges); // Tenta ../data/edges.json
+    }
 
     // Checa se os arquivos abriram
     if (!(nodes_file.is_open() && edges_file.is_open())) {
@@ -26,7 +38,9 @@ Graph::Graph(const std::string& nodes, const std::string& edges) {
     
     // indica pra hashtable q eu vou botar +- esse tanto de elementos
     // isso evita várias realocações durante um loop, por exemplo. É tipo aquele tamanho inicial quando eu implementei
-    idToIndex.reserve(j_file.size()); 
+    idToIndex.reserve(j_file.size());
+    // reserva memoria pras coordenadas
+    nodeCoords.reserve(j_file.size());
 
     // =============================================
     //  Construindo os nodos na lista de adjacência
@@ -35,6 +49,11 @@ Graph::Graph(const std::string& nodes, const std::string& edges) {
     for(auto& node : j_file) {
         // Mapeia id -> index
         long long id = node["id"];  // cria um id temporario pra facilitar a escrita
+
+        // le lat e lon do json
+        double lat = node.value("y", 0.0); // y é a latitude
+        double lon = node.value("x", 0.0); // x é a longitude
+
         
         // index = último espaço vazio da lista de adj. Escrever assim só pra ficar mais claro.
         // e desse jeito eu não preciso controlar o i++ por fora também.
@@ -47,6 +66,8 @@ Graph::Graph(const std::string& nodes, const std::string& edges) {
         // Como eu não dei nenhum parâmetro, o compilador chama o construtor de vetor e struct padrão.
             // Ou seja, o espaço alocado lá existe mas não tem nada ainda.
         adj.emplace_back();
+        // guarda a coordenada no vetor (mesmo indice i)
+        nodeCoords.push_back({lat,lon});
     }
 
     // =============================================
@@ -139,4 +160,11 @@ int Graph::getIndexFromId(long long id) const {
 
 long long Graph::getIdFromIndex(int idx) const {
     return indexToId.at(idx);
+}
+Graph::Coordinate Graph::getCoord(int u) const{
+    // precaução pra nao acessar memoria invalida
+    if (u >= 0 && u < nodeCoords.size()) {
+        return nodeCoords[u];
+    }
+    return {0.0,0.0};
 }

@@ -11,19 +11,21 @@ namespace trie
     std::string word;
     char val;
     int isEndOfWord;
-    unsigned long *nodeIds;
+    // teste usando long long
+    unsigned long long *nodeIds;
     int nodeIdsSize;
   } typedef TrieNode;
 
   struct SearchResult
   {
     std::string label;
-    unsigned long *nodeIds;
+      // teste usando long long
+    unsigned long long *nodeIds;
     int nodeIdsSize;
   };
 
   TrieNode *init();
-  void insertWord(TrieNode *trieRoot, std::string word, unsigned long nodeId);
+  void insertWord(TrieNode *trieRoot, std::string word, unsigned long long nodeId);
   void search(TrieNode *node, std::string word, SearchResult results[], int *resultsCount);
   void destroy(TrieNode *root);
 }

@@ -12,7 +12,8 @@ namespace trie
   {
     TrieNode *createNode(char nodeChar)
     {
-      TrieNode *node = (TrieNode *)malloc(sizeof(TrieNode));
+        TrieNode *node = new TrieNode();
+      //TrieNode *node = (TrieNode *)malloc(sizeof(TrieNode));
       node->isEndOfWord = 0;
       node->val = nodeChar;
       node->nodeIds = NULL;
@@ -74,7 +75,7 @@ namespace trie
     return detail::createNode('\0');
   }
 
-  void insertWord(TrieNode *node, std::string word, unsigned long nodeId)
+  void insertWord(TrieNode *node, std::string word, unsigned long long nodeId)
   {
     TrieNode *currNode = node;
 
@@ -97,7 +98,11 @@ namespace trie
 
     currNode->isEndOfWord = 1;
 
-    unsigned long *newIdsTemp = (unsigned long *)realloc(currNode->nodeIds, sizeof(unsigned long) * (currNode->nodeIdsSize + 1));
+    //unsigned long long *newIdsTemp = (unsigned long long *)realloc(currNode->nodeIds, sizeof(unsigned long long) * (currNode->nodeIdsSize + 1));
+    unsigned long long *newIdsTemp = (unsigned long long *)realloc(
+        currNode->nodeIds,
+        sizeof(unsigned long long) * (currNode->nodeIdsSize + 1)
+        );
     if (!newIdsTemp)
     {
       std::cerr << "error reallocating currNode->nodeIds\n";
@@ -149,7 +154,7 @@ namespace trie
       // iterate until all possible ends and return on searchResults
       detail::findAllPossibleEnds(currNode, results, resultsCount);
     }
-  };
+  }
 
   void destroy(TrieNode *currNode)
   {
@@ -170,6 +175,6 @@ namespace trie
     {
       free(currNode->nodeIds);
     }
-    free(currNode);
+    delete currNode;
   }
 }

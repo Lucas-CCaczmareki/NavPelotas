@@ -29,6 +29,7 @@ unix {
 QMAKE_EXTRA_TARGETS += copy_files
 POST_TARGETDEPS += copy_files
 
+INCLUDEPATH += include fileModule
 # --- Isso faz os arquivos aparecerem na árvore do projeto (apenas visual) ---
 DISTFILES += \
 # Isso faz TODOS os arquivos da pasta data aparecerem na árvore do projeto

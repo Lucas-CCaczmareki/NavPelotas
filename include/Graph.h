@@ -23,6 +23,11 @@ public:
         double weight;  // Peso da aresta
         // A direção é representada com a lista de adjacência.
     };
+    // Estrutura latitude e longitude;
+    struct Coordinate{
+        double lat;
+        double lon;
+    };
 
     // Construtor padrão pra testes
     Graph(int numVertices);
@@ -52,11 +57,18 @@ public:
     // Getter pra transformar index num id
     long long getIdFromIndex(int idx) const;
 
+    // getter pra pegar a coordenada de um nó
+    Coordinate getCoord(int u) const;
+
 private:
     // A lista de adjacência em si.
     // adj.push_back -> adiciona um nodo
     // adj[0].push_back -> adiciona um caminho nesse nodo
     std::vector<std::vector<Edge>> adj;
+
+    // vetor para armazenar coordenadas
+    // sincroniza com o vector adj( o nó no indice i tem a coord no indice i)
+    std::vector<Coordinate> nodeCoords;
 
     // A hashtable pra converter o id(long long) em um index(int)
     // isso vai aumentar muito a eficiência de memória, pq não vai precisar ter bilhões de vetores vazios
