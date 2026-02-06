@@ -3,8 +3,7 @@
 #include <iostream>
 
 // Construtor que recebe um grafo por referência
-// Referência é tipo um "apelido" pra um objeto que já existe
-// ou seja, eu to chamando a lista adj lá do grafo de adj aqui. Esses nomes se referem ao mesmo objeto em memória
+// eu to chamando a lista adj lá do grafo de adj aqui. Esses nomes se referem ao mesmo objeto em memória
 
 Dijkstra::Dijkstra(const Graph& g, int origin) :    // esses ':' representam o inicio da initializer list 
     // OBS: A initializer list é obrigatória pra atributos que são referência
@@ -77,16 +76,6 @@ void Dijkstra::execute() {
             // OBS: Se houver mais de um caminho ótimo e eu quiser garantir que ele escolha sempre o ultimo caminho
             // é só trocar a comparação pra <=. Qual ele escolhe vai depender disso e outros fatores, mas é arbitrário, sempre vai vir o mesmo
             if((dist[cur_node.id] + edge.weight) < dist[edge.to]) {
-                
-                // DEBUG
-                // std::cout
-                //     << "edge "
-                //     << graph.getIdFromIndex(cur_node.id)
-                //     << " -> "
-                //     << graph.getIdFromIndex(edge.to)
-                //     << " | weight = "
-                //     << edge.weight
-                //     << "\n";
 
                 
                 // Dist mantém a soma do menor caminho da origem ate o idx dela atualizado

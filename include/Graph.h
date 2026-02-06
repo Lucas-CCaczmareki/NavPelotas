@@ -1,12 +1,3 @@
-// O .h é um header. Ele só diz pro .cpp que a gente ta chamando que essas funções dentro existem 
-
-// INCLUDE GUARD
-// Isso aqui confere se o graph_h já existe no momento que chamamos o cabeçalho
-// Se não existe, ele faz o define e cria, se já existe, ele ignora.
-// Impede que dê erro por múltiplas chamadas, ou que dê erro se outro header contém o graph_h
-
-// Basicamente: O include guard garante que o header seja processado apenas uma vez, 
-             // mesmo se incluído múltiplas vezes direta ou indiretamente
 #ifndef GRAPH_H
 #define GRAPH_H
 
@@ -28,16 +19,12 @@ public:
     Graph(int numVertices);
 
     // Construtor com o arquivo
-    // const garante que o construtor não modifique a string. & evita que ele crie uma cópia local
-    // & é um parâmetro de referência, serve pra passar exatamente o endereço do item enviado
     Graph(const std::string& nodes, const std::string& edges);
 
     // Adiciona aresta direcionada
     void addEdge(int u, int v, double weight);
 
     // Retorna a lista (vetor) de vizinhos da aresta selecionada
-    // esse const ao final da assinatura significa que o método não pode alterar nenhum atributo da classe (.this)
-    // isso é importante por que o neighbours funciona como um getter, ent n é pra ele modificar nada
     const std::vector<Edge>& neighbours(int u) const;
 
     // Quantidade de nodos

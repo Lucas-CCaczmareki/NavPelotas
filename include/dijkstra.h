@@ -8,11 +8,8 @@
 #include "Graph.h"
 
 class Dijkstra {
-    // Só pra diminuir o tamanho do bag q eu tenho que escrever
-    // using AdjList = std::vector<std::vector<Graph::Edge>>;
 
 public:
-    // basicamente uma struct com 2 elementos e tipos adaptáveis
     struct pqNode {
         int id;
         double path_weight;
@@ -42,7 +39,7 @@ public:
     // Getter para reconstruir o menor caminho entre A e B
     std::vector<Prev> getPath(int destination);
 
-    // Setter pra mudar a origin]
+    // Setter pra mudar a origin
     void setOrigin(int origin);
 
 private:

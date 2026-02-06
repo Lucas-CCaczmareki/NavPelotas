@@ -42,8 +42,7 @@ Graph::Graph(const std::string& nodes, const std::string& edges) {
         idToIndex[id] = i;              // isso aqui faz o id sempre mapear pro index i, na mesma ordem que eles tão escrito no json
         indexToId.push_back(id);        // e isso aqui guarda o caminho contrário
 
-        // Cria um nodo
-        // O emplace back vai criar o objeto (std::vector<Edge>) dentro do vetor de vetores adj.
+        // Cria um nodo direto dentro do adj
         // Como eu não dei nenhum parâmetro, o compilador chama o construtor de vetor e struct padrão.
             // Ou seja, o espaço alocado lá existe mas não tem nada ainda.
         adj.emplace_back();
@@ -54,24 +53,12 @@ Graph::Graph(const std::string& nodes, const std::string& edges) {
     // =============================================
     edges_file >> j_file;
 
-    // Testando tamanho
-    // int n_edgesFile = 0;
-    // int n_edgesGraph = 0; 
-
     // Primeiro precisamos descobrir o sentido da via
     for(auto& edge : j_file) {
 
         // O value trata caso o campo esteja vazio. Ele atriu false como padrão
         bool oneway = edge["data"].value("oneway", false);
         double length = edge["data"].value("length", 1e18); //atribui um numero gigante caso o valor n seja dado, pra n usar a aresta mesmo
-
-        // Contando tamanho pra testar
-        // n_edgesFile++;
-        // if (oneway) {
-        //     n_edgesGraph += 1;
-        // } else {
-        //     n_edgesGraph += 2;
-        // }
 
         // Ou seja, se a via é de mão dupla. Vai e volta
         if(!oneway) {
@@ -95,19 +82,10 @@ Graph::Graph(const std::string& nodes, const std::string& edges) {
             }
         }
     }
-    // std::cout << "Grafo finalizado. Edges no arquivo: " << n_edgesFile << "\nEdges no grafo: " << n_edgesGraph << "\n\n";
 }
 
 // Adiciona uma edge à um node.
 void Graph::addEdge(int u, int v, double weight) {
-    // 1o jeito (q eu pensei)
-    // Graph::Edge e;
-    // e.to = v;
-    // e.weight = weight;
-    // adj[u].push_back(e);
-    
-    // jeito c++ de fazer: 
-    // o emplace back já cria o objeto direto dentro da lista de adjacência e evita criar um objeto temporário.
     adj[u].emplace_back(Graph::Edge{v, weight});
 }
 
