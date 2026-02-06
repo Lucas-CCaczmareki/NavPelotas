@@ -109,220 +109,175 @@ int main() {
 #include <iostream>
 #include <vector>
 #include <string>
-#include <limits>
 #include <filesystem>
-#include <unordered_map> // <--- NOVO: Para o dicionário reverso
+#include <unordered_map>
 #include "Graph.h"
 #include "trie.h"
 #include "fileModule.h"
 #include "Dijkstra.h"
 
-// --- NOVO: Dicionário Reverso (ID -> Nome da Rua) ---
-// Usamos isso para descobrir o nome da rua quando o Dijkstra devolve um ID.
-std::unordered_map<unsigned long long, std::string> mapaNomesRuas;
+// mapa para busca reversa (id -> nome da rua)
+std::unordered_map<unsigned long long, std::string> idToLabelMap;
 
-// Callback modificado: Insere na Trie E no Mapa reverso ao mesmo tempo
-void processarDadosRua(trie::TrieNode* root, std::string label, unsigned long long id) {
-    // 1. Insere na Trie (para busca)
+// callback para popular a trie e o mapa reverso simultaneamente
+// chamada pelo filemodule
+void loadDataCallback(trie::TrieNode* root, std::string label, unsigned long long id) {
     trie::insertWord(root, label, id);
-
-    // 2. Insere no Mapa (para exibir rota depois)
-    mapaNomesRuas[id] = label;
+    idToLabelMap[id] = label;
 }
 
-// --- FUNÇÃO DE LEITURA BLINDADA ---
-std::string lerLinhaSegura(const std::string& mensagem) {
-    std::string entrada;
+// leitura segura para evitar sujeira no buffer do teclado
+std::string safeReadLine(const std::string& msg) {
+    std::string input;
     while (true) {
-        std::cout << mensagem << std::flush;
+        std::cout << msg << std::flush;
         if (std::cin.fail()) std::cin.clear();
 
-        if (!std::getline(std::cin, entrada)) {
-            std::cout << "\n[!] Fim da entrada de dados (EOF). Encerrando.\n";
+        if (!std::getline(std::cin, input)) {
+            std::cout << "\n[!] fim de entrada (eof). encerrando.\n";
             exit(0);
         }
-
-        if (!entrada.empty() && entrada.back() == '\r') entrada.pop_back();
-
-        if (!entrada.empty()) return entrada;
+        if (!input.empty() && input.back() == '\r') input.pop_back();
+        if (!input.empty()) return input;
     }
 }
 
-// --- NOVO: Função para imprimir a rota bonitinha ---
-void imprimirRotaDetalhada(Graph* g, const std::vector<Dijkstra::Prev>& path, int idxDestino) {
-    std::cout << "\n==============================================\n";
-    std::cout << "               ROTA DETALHADA                 \n";
-    std::cout << "==============================================\n";
+// imprime a rota agrupando ruas com mesmo nome
+void printDetailedRoute(Graph* g, const std::vector<Dijkstra::Prev>& path, int destIdx) {
+    std::cout << "\n================ ROTA DETALHADA ================\n";
 
-    std::string ultimaRua = "";
-    double distanciaAcumulada = 0;
-    int passos = 0;
+    std::string lastStreet = "";
+    int step = 0;
 
-    // Reconstrói o caminho de trás pra frente (o Dijkstra guarda o "pai" de cada nó)
-    // Precisamos inverter ou seguir do destino até a origem.
-    // O seu Dijkstra já tem getPath que devolve ordenado?
-    // Assumindo que seu getPath retorna vetor de índices ordenados da Origem -> Destino:
-    // Se o seu Dijkstra retorna Prev struct, precisamos reconstruir.
-    // Vou usar a lógica padrão de reconstrução aqui para garantir:
+    for (const auto& p : path) {
+        long long osmId = g->getIdFromIndex(p.node);
+        std::string currentStreet = "Rua desconhecida (ID " + std::to_string(osmId) + ")";
 
-    std::vector<int> caminhoOrdenado;
-    int atual = idxDestino;
-
-    // Se o seu Dijkstra.h não expõe o vetor 'previous', use o método getPath se ele retornar vector<int>
-    // Vou assumir que você implementou um getPath que retorna vector<int> ou algo similar.
-    // Se não, vamos usar a lógica simples:
-    // (Adapte esta parte se o seu getPath for diferente)
-
-    // ATENÇÃO: Estou assumindo que dj.getPath retorna um vector<int> ou similar.
-    // Vou usar uma lógica genérica de impressão baseada no vetor que você já usava no código anterior.
-
-    // No código anterior você iterava sobre 'path'. Vamos usar isso.
-
-    for (size_t i = 0; i < path.size(); i++) {
-        int u_idx = path[i].node; // Ajuste conforme sua struct Prev
-
-        long long osmId = g->getIdFromIndex(u_idx);
-
-        // Tenta achar o nome da rua
-        std::string nomeAtual = "Rua sem nome (ID " + std::to_string(osmId) + ")";
-        if (mapaNomesRuas.count(osmId)) {
-            nomeAtual = mapaNomesRuas[osmId];
+        if (idToLabelMap.count(osmId)) {
+            currentStreet = idToLabelMap[osmId];
         }
 
-        // Só imprime se mudou de rua (para não imprimir "Rua Bento" 50 vezes seguidas)
-        if (nomeAtual != ultimaRua) {
-            passos++;
-            if (i == 0) {
-                std::cout << " " << passos << ". Comece na " << nomeAtual << "\n";
-            } else {
-                std::cout << " " << passos << ". Siga para " << nomeAtual << "\n";
-            }
-            ultimaRua = nomeAtual;
+        // só imprime se mudou o nome da rua
+        if (currentStreet != lastStreet) {
+            step++;
+            if (step == 1) std::cout << " " << step << ". comece na " << currentStreet << "\n";
+            else std::cout << " " << step << ". siga para " << currentStreet << "\n";
+            lastStreet = currentStreet;
         }
     }
-
-    std::cout << " " << ++passos << ". CHEGADA AO DESTINO!\n";
-    std::cout << "==============================================\n";
+    std::cout << " " << ++step << ". CHEGADA AO DESTINO!\n";
+    std::cout << "================================================\n";
 }
 
-// ... Função selecionarLocal IGUAL AO ANTERIOR ...
-long long selecionarLocal(trie::TrieNode* root, const std::string& tipo) {
-    trie::SearchResult resultados[100];
-    int qtdResultados = 0;
+// interface de busca e seleção via trie
+long long selectLocation(trie::TrieNode* root, const std::string& type) {
+    trie::SearchResult results[100];
+    int count = 0;
 
     while (true) {
-        std::string busca = lerLinhaSegura("\n>> Digite o nome da " + tipo + " (ou 'sair'): ");
-        if (busca == "sair") return -1;
+        std::string query = safeReadLine("\n>> digite a " + type + " (ou 'sair'): ");
+        if (query == "sair") return -1;
 
-        trie::search(root, busca, resultados, &qtdResultados);
+        trie::search(root, query, results, &count);
 
-        if (qtdResultados == 0) {
-            std::cout << "   [!] Nada encontrado. Tente partes do nome.\n";
+        if (count == 0) {
+            std::cout << "   [!] nada encontrado. tente outro nome.\n";
             continue;
         }
 
-        std::cout << "   Encontramos " << qtdResultados << " opcoes:\n";
-        int limite = (qtdResultados > 10) ? 10 : qtdResultados;
+        std::cout << "   encontramos " << count << " opcoes:\n";
+        int limit = (count > 10) ? 10 : count;
 
-        for (int i = 0; i < limite; i++) {
-            std::cout << "   [" << i << "] " << resultados[i].label << "\n";
+        for (int i = 0; i < limit; i++) {
+            std::cout << "   [" << i << "] " << results[i].label << "\n";
         }
 
         while (true) {
-            std::string escolhaStr = lerLinhaSegura("   >> Digite o NUMERO (0-" + std::to_string(limite-1) + "): ");
+            std::string choiceStr = safeReadLine("   >> digite o numero (0-" + std::to_string(limit - 1) + "): ");
             try {
-                int escolha = std::stoi(escolhaStr);
-                if (escolha >= 0 && escolha < qtdResultados) {
-                    long long id = resultados[escolha].nodeIds[0];
-                    std::cout << "   -> OK: " << resultados[escolha].label << "\n";
+                int choice = std::stoi(choiceStr);
+                if (choice >= 0 && choice < count) {
+                    long long id = results[choice].nodeIds[0];
+                    std::cout << "   -> selecionado: " << results[choice].label << "\n";
                     return id;
                 }
-                std::cout << "   [!] Numero invalido.\n";
-            } catch (...) { std::cout << "   [!] Digite apenas numeros.\n"; }
+                std::cout << "   [!] numero invalido.\n";
+            } catch (...) { std::cout << "   [!] digite apenas numeros.\n"; }
         }
     }
 }
 
 int main() {
     setlocale(LC_ALL, "C");
-    std::cout << "=== NAVPELOTAS - ROTA DETALHADA ===\n";
+    std::cout << "=== NAVPELOTAS 2026 ===\n";
 
-    // 1. Grafo
-    std::cout << "[1/2] Carregando Grafo... ";
+    // carrega o grafo
+    std::cout << "[1/2] carregando grafo... ";
     Graph* g = nullptr;
     try {
-        // Ajuste os caminhos se precisar
-        std::string n = "../data/nodes_formatado.json";
-        std::string e = "../data/edges_formatado.json";
+        std::string nPath = "data/nodes_formatado.json";
+        std::string ePath = "data/edges_formatado.json";
 
-        // Verifica se existe na pasta local primeiro
-        if (std::filesystem::exists("data/nodes_formatado.json")) {
-            n = "data/nodes_formatado.json";
-            e = "data/edges_formatado.json";
+        if (!std::filesystem::exists(nPath)) {
+            nPath = "../data/nodes_formatado.json";
+            ePath = "../data/edges_formatado.json";
         }
 
-        g = new Graph(n, e);
-        std::cout << "OK (" << g->size() << " nos)\n";
+        g = new Graph(nPath, ePath);
+        std::cout << "ok (" << g->size() << " nos)\n";
     } catch (const std::exception& e) {
-        std::cerr << "\nERRO GRAFO: " << e.what() << "\n";
+        std::cerr << "\n[erro fatal grafo] " << e.what() << "\n";
         return 1;
     }
 
-    // 2. Trie + Mapa
-    std::cout << "[2/2] Carregando Ruas... ";
+    // carrega a trie e o mapa
+    std::cout << "[2/2] indexando ruas... ";
     trie::TrieNode* root = trie::init();
     try {
-        // Passamos nossa função nova que preenche o MAPA também
-        fileModule::processNodesToLabel(root, processarDadosRua);
+        fileModule::processNodesToLabel(root, loadDataCallback);
     } catch (...) {
-        std::cerr << "\nERRO TRIE.\n"; return 1;
+        std::cerr << "\n[erro fatal trie]\n";
+        return 1;
     }
 
-    std::cout << "\nSistema Pronto!\n";
+    std::cout << "\nsistema pronto!\n";
 
+    // loop principal
     while(true) {
-        long long idOrigem = selecionarLocal(root, "ORIGEM");
-        if (idOrigem == -1) break;
+        long long originId = selectLocation(root, "ORIGEM");
+        if (originId == -1) break;
 
-        long long idDestino = selecionarLocal(root, "DESTINO");
-        if (idDestino == -1) break;
+        long long destId = selectLocation(root, "DESTINO");
+        if (destId == -1) break;
 
         try {
-            int idxOrigem = g->getIndexFromId(idOrigem);
-            int idxDestino = g->getIndexFromId(idDestino);
+            int u = g->getIndexFromId(originId);
+            int v = g->getIndexFromId(destId);
 
-            std::cout << "\n[Calculando rota...]\n";
+            std::cout << "\n[calculando rota...]\n";
 
-            Dijkstra dj(*g, idxOrigem);
+            Dijkstra dj(*g, u);
             dj.execute();
 
-            double dist = dj.getDistance(idxDestino);
+            double dist = dj.getDistance(v);
 
             if (dist > 1e15) {
-                std::cout << ">>> Sem caminho possivel.\n";
+                std::cout << ">>> sem caminho possivel.\n";
             } else {
-                std::cout << ">>> Distancia: " << dist << " metros\n";
-
-                // Pega o caminho (Adapte se seu Dijkstra retornar vector<int>)
-                // Aqui assumo que você tem um método getPath que retorna vector<Prev> ou vector<int>
-                // Se seu getPath retorna vector<int> (indices), use assim:
-
-                // Exemplo se getPath retorna indices:
-                /* std::vector<int> caminho = dj.getPath(idxDestino);
-                std::vector<Dijkstra::Prev> caminhoAdaptado;
-                for(int idx : caminho) caminhoAdaptado.push_back({idx, 0});
-                imprimirRotaDetalhada(g, caminhoAdaptado, idxDestino);
-                */
-
-                // Se o seu getPath retorna o struct Prev (como no codigo anterior):
-                auto caminho = dj.getPath(idxDestino);
-                imprimirRotaDetalhada(g, caminho, idxDestino);
+                std::cout << ">>> distancia: " << dist << " metros\n";
+                auto path = dj.getPath(v);
+                printDetailedRoute(g, path, v);
             }
 
         } catch (const std::exception& e) {
-            std::cout << "Erro: " << e.what() << "\n";
+            std::cout << "[erro processamento] " << e.what() << "\n";
         }
     }
 
+    // limpeza
+    if (root) trie::destroy(root);
+    if (g) delete g;
+
+    std::cout << "\nencerrando.\n";
     return 0;
 }
