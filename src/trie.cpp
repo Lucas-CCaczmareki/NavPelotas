@@ -50,10 +50,11 @@ namespace trie
 
     void findAllPossibleEnds(trie::TrieNode *currNode, SearchResult results[], int *resultsCount)
     {
-      if (currNode == NULL)
-      {
-        return;
-      }
+        // trava de segurança pra não estourar caso tenha mais de 100 resultados.
+        if (currNode == NULL || *resultsCount >= 100)
+        {
+            return;
+        }
 
       if (currNode->isEndOfWord)
       {

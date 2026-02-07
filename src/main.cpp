@@ -192,8 +192,16 @@ long long selectLocation(trie::TrieNode* root, const std::string& type) {
             std::cout << "   [" << i << "] " << results[i].label << "\n";
         }
 
+        // loop de selecao
         while (true) {
-            std::string choiceStr = safeReadLine("   >> digite o numero (0-" + std::to_string(limit - 1) + "): ");
+            std::string choiceStr = safeReadLine("   >> digite o numero (0-" + std::to_string(limit - 1) + ") ou 'c' para cancelar: ");
+
+            // volta para a pesquisa se o usuario desistir
+            if (choiceStr == "c" || choiceStr == "cancelar") {
+                std::cout << "   [!] selecao cancelada.\n";
+                break;
+            }
+
             try {
                 int choice = std::stoi(choiceStr);
                 if (choice >= 0 && choice < count) {
@@ -202,7 +210,7 @@ long long selectLocation(trie::TrieNode* root, const std::string& type) {
                     return id;
                 }
                 std::cout << "   [!] numero invalido.\n";
-            } catch (...) { std::cout << "   [!] digite apenas numeros.\n"; }
+            } catch (...) { std::cout << "   [!] digite um numero ou 'c'.\n"; }
         }
     }
 }
