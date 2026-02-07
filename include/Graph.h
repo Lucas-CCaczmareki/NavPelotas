@@ -1,81 +1,75 @@
-// O .h é um header. Ele só diz pro .cpp que a gente ta chamando que essas funções dentro existem 
-
-// INCLUDE GUARD
-// Isso aqui confere se o graph_h já existe no momento que chamamos o cabeçalho
-// Se não existe, ele faz o define e cria, se já existe, ele ignora.
-// Impede que dê erro por múltiplas chamadas, ou que dê erro se outro header contém o graph_h
-
-// Basicamente: O include guard garante que o header seja processado apenas uma vez, 
-             // mesmo se incluído múltiplas vezes direta ou indiretamente
+// Include guard
 #ifndef GRAPH_H
 #define GRAPH_H
 
-#include <vector>   // vai ser usado pra montar a lista de adjacência
+#include <vector>
 #include <string>
 #include <unordered_map>
 
+// Representa um grafo ponderado e direcionado utilizando lista de adjacência
 class Graph {
 
 public:
     // Estrutura das arestas.  
     struct Edge {
-        int to;         // Endereço (id) do nodo pra onde ela aponta
-        double weight;  // Peso da aresta
-        // A direção é representada com a lista de adjacência.
+        int to;         // índice do nodo de destino
+        double weight;  // peso da aresta
+        /* Direção:
+        A direção é representada com a lista de adjacência. Por exemplo:
+        adj[0] -> 1, 2, 3
+        adj[1] -> 0
+        node 0 e node 1 é uma via de mão dupla. */
     };
-    // Estrutura latitude e longitude;
-    struct Coordinate{
+
+    // Coordenadas geográficas associadas a um nodo
+    struct Coordinate {
         double lat;
         double lon;
     };
 
-    // Construtor padrão pra testes
+    // Construtor auxiliar: cria um grafo vazio com N nodos
     Graph(int numVertices);
 
-    // Construtor com o arquivo
-    // const garante que o construtor não modifique a string. & evita que ele crie uma cópia local
-    // & é um parâmetro de referência, serve pra passar exatamente o endereço do item enviado
+    // Constrói a paritir de arquivos JSON padronizado OSM
     Graph(const std::string& nodes, const std::string& edges);
 
-    // Adiciona aresta direcionada
+    // Adiciona aresta direcionada u -> v com peso.
     void addEdge(int u, int v, double weight);
 
-    // Retorna a lista (vetor) de vizinhos da aresta selecionada
-    // esse const ao final da assinatura significa que o método não pode alterar nenhum atributo da classe (.this)
-    // isso é importante por que o neighbours funciona como um getter, ent n é pra ele modificar nada
+    // Retorna a lista de arestas saindo do nodo u
     const std::vector<Edge>& neighbours(int u) const;
 
-    // Quantidade de nodos
+    // Reorna a quantidade de nodos do grafo
     int size() const;
 
-    // Quantidade de arestas
+    // Retorna a quantidade total de arestas
     int totalEdges() const;
 
-    // Getter pra transformar id num index
+    // Converte um ID externo (JSON) para índice interno
     int getIndexFromId(long long id) const;
 
-    // Getter pra transformar index num id
+    // Converte um índice interno para ID externo
     long long getIdFromIndex(int idx) const;
 
-    // getter pra pegar a coordenada de um nó
+    // Retorna a coordenada associada ao nodo u
     Coordinate getCoord(int u) const;
 
 private:
-    // A lista de adjacência em si.
-    // adj.push_back -> adiciona um nodo
-    // adj[0].push_back -> adiciona um caminho nesse nodo
+    // Lista de adjacência:
+    // É construída em ordem de leitura do arquivo nodes.
+    // adj[u] contém todas as arestas saindo do nodo u.
     std::vector<std::vector<Edge>> adj;
 
-    // vetor para armazenar coordenadas
-    // sincroniza com o vector adj( o nó no indice i tem a coord no indice i)
+    // Coordenadas associadas a cada nodo (mesmo índice de adj)
     std::vector<Coordinate> nodeCoords;
 
-    // A hashtable pra converter o id(long long) em um index(int)
-    // isso vai aumentar muito a eficiência de memória, pq não vai precisar ter bilhões de vetores vazios
-    // só pra usar o id com index direto.
-    std::unordered_map<long long, int> idToIndex;   // index nesse caso é o índice do nodo na lista de adjacência
+    // ID: identificador do nodo nos jsons. Ex: 240003004
+    // INDEX: Índice do nodo na lista de adjacência.
 
-    // Outra hashtable pra conseguir fazer o caminho contrário
+    // Mapeamento hashtable ID externo -> índice interno
+    std::unordered_map<long long, int> idToIndex;   
+
+    // Mapeamento inverso: Índice interno -> ID externo
     std::vector<long long> indexToId;
 };
 

@@ -5,10 +5,8 @@
 
 // Construtor padrão
 Graph::Graph(int numVertices) {
-    // Cria todos os vértices (sem nenhuma conexão ainda)
-    adj.resize(numVertices);
-    // Redimensiona o vetor de coordenadas com 0.0 pra evitar crash
-    nodeCoords.resize(numVertices, {0.0,0.0});
+    adj.resize(numVertices);                    // Cria todos os vértices (sem nenhuma conexão ainda)
+    nodeCoords.resize(numVertices, {0.0,0.0});  // Redimensiona o vetor de coordenadas com 0.0 pra evitar crash
 }
 
 // Construtor com arquivo
@@ -16,9 +14,10 @@ Graph::Graph(const std::string& nodes, const std::string& edges) {
     nlohmann::json j_file;
     std::ifstream nodes_file(nodes);
     std::ifstream edges_file(edges);
+
     // Se falhar (ex: rodando de dentro da pasta debug), tenta voltar um nível
     if (!nodes_file.is_open()) {
-        nodes_file.clear(); // Limpa o estado de erro
+        nodes_file.clear();             // Limpa o estado de erro
         nodes_file.open("../" + nodes); // Tenta ../data/nodes.json
     }
 
@@ -32,81 +31,61 @@ Graph::Graph(const std::string& nodes, const std::string& edges) {
         throw std::runtime_error("Erro ao abrir algum dos arquivos!\n");
     }
 
-    
-    // Primeiro vamo montar o vetorzao de nodes(que é um vetor pra edges)
+    // =================== PARTE 1: Montar o vetor de nodes (adj.node<Edges>) ===================
     nodes_file >> j_file;
     
-    // indica pra hashtable q eu vou botar +- esse tanto de elementos
-    // isso evita várias realocações durante um loop, por exemplo. É tipo aquele tamanho inicial quando eu implementei
+    // Seta um tamanho inicial pra hastable com base no tamanho do nodes.json
+    // Motivo: Evita várias realocações durante o loop
     idToIndex.reserve(j_file.size());
-    // reserva memoria pras coordenadas
-    nodeCoords.reserve(j_file.size());
+    nodeCoords.reserve(j_file.size());      // reserva memoria pras coordenadas
 
-    // =============================================
-    //  Construindo os nodos na lista de adjacência
-    // =============================================
-    // Agora eu mapeio todos ids de nodo pra um index na hashtable e já construo eles na lista de adjacência
+    // Mapeia todos os IDs externos para um índice 
+    // Constrói esse nodo na lista de adjacência
     for(auto& node : j_file) {
-        // Mapeia id -> index
-        long long id = node["id"];  // cria um id temporario pra facilitar a escrita
+        // Mapeamento ID externo -> índice
+        // Motivo: Aumenta eficiência de memória; Evita criar vários vetores vazios para conseguir usar long long no acesso direto
+
+        long long id = node["id"];          // cria um id temporario pra facilitar a escrita
 
         // le lat e lon do json
-        double lat = node.value("y", 0.0); // y é a latitude
-        double lon = node.value("x", 0.0); // x é a longitude
+        double lat = node.value("y", 0.0);  // y é a latitude
+        double lon = node.value("x", 0.0);  // x é a longitude
+
 
         
-        // index = último espaço vazio da lista de adj. Escrever assim só pra ficar mais claro.
-        // e desse jeito eu não preciso controlar o i++ por fora também.
-        int i = adj.size();         
-        idToIndex[id] = i;              // isso aqui faz o id sempre mapear pro index i, na mesma ordem que eles tão escrito no json
-        indexToId.push_back(id);        // e isso aqui guarda o caminho contrário
+        int i = adj.size();                 // próximo índice i livre = tamanho atual da lista de adjacência (começa em 0)
+        idToIndex[id] = i;                  // ID -> I; Ordem igual a do JSON
+        indexToId.push_back(id);            // I -> ID (caminho contrário)
 
-        // Cria um nodo
-        // O emplace back vai criar o objeto (std::vector<Edge>) dentro do vetor de vetores adj.
-        // Como eu não dei nenhum parâmetro, o compilador chama o construtor de vetor e struct padrão.
-            // Ou seja, o espaço alocado lá existe mas não tem nada ainda.
+        // Cria um nodo diretamente (emplace) dentro da lista de adjacência usando o construtor padrão do vector<Edges>.
+        // Vetor de EDGES vazio ainda.
         adj.emplace_back();
-        // guarda a coordenada no vetor (mesmo indice i)
-        nodeCoords.push_back({lat,lon});
+        nodeCoords.push_back({lat,lon});    // guarda a coordenada no vetor (mesmo indice i)
     }
 
-    // =============================================
-    //  Construindo as arestas para cada nodo
-    // =============================================
+    // =================== PARTE 2: Preenchendo o vetor das arestas (adj[i].edge) ===================
     edges_file >> j_file;
 
-    // Testando tamanho
-    // int n_edgesFile = 0;
-    // int n_edgesGraph = 0; 
-
-    // Primeiro precisamos descobrir o sentido da via
+    
     for(auto& edge : j_file) {
+        bool oneway = edge["data"].value("oneway", false);  // Caso o campo esteja vazio, atribui false como padrão
+        double length = edge["data"].value("length", 1e18); // Caso o campo esteja vazio, atribui um numero gigante
 
-        // O value trata caso o campo esteja vazio. Ele atriu false como padrão
-        bool oneway = edge["data"].value("oneway", false);
-        double length = edge["data"].value("length", 1e18); //atribui um numero gigante caso o valor n seja dado, pra n usar a aresta mesmo
+        // Se a via é twoway/mão dupla (vai e volta)
+        if(!oneway) { // = if (twoway == true)
 
-        // Contando tamanho pra testar
-        // n_edgesFile++;
-        // if (oneway) {
-        //     n_edgesGraph += 1;
-        // } else {
-        //     n_edgesGraph += 2;
-        // }
-
-        // Ou seja, se a via é de mão dupla. Vai e volta
-        if(!oneway) {
-            // add no sentido u -> v
-            addEdge(idToIndex[edge["u"]], idToIndex[edge["v"]], length);
-
-            // add no sentido v -> u
-            addEdge(idToIndex[edge["v"]], idToIndex[edge["u"]], length);
+            // Campo 'reversed' não importa aqui, pois adicionamos nos 2 sentidos que qualquer forma.
+            addEdge(idToIndex[edge["u"]], idToIndex[edge["v"]], length); // add no sentido u -> v
+            addEdge(idToIndex[edge["v"]], idToIndex[edge["u"]], length); // add no sentido v -> u
         
-        // Caso seja 1 sentido só
+        // Caso a via seja oneway/mão única (só vai, ou só volta)
         } else {
-            // Aqui nao vai rolar a exception do reversed ser um array simplesmente pq se é um array 
-            // a rua NAO é oneway e fodase o reversed nesse caso.
+
+            // Campo 'reversed' só é lido quando a via É oneway.
+            // Indica que a via está mapeada no sentido oposto ao expresso no JSON.
+            // Não é necessário tratar o caso/excpection de array, pois ele só ocorre em vias twoway.
             bool reversed = edge["data"].value("reversed", false);
+
             // Se é reversed, o sentido é v -> u
             if(reversed) {
                 addEdge(idToIndex[edge["v"]], idToIndex[edge["u"]], length);
@@ -116,37 +95,29 @@ Graph::Graph(const std::string& nodes, const std::string& edges) {
             }
         }
     }
-    // std::cout << "Grafo finalizado. Edges no arquivo: " << n_edgesFile << "\nEdges no grafo: " << n_edgesGraph << "\n\n";
 }
 
-// Adiciona uma edge à um node.
+// Adiciona uma edge dirigida u -> v com peso associado
 void Graph::addEdge(int u, int v, double weight) {
-    // 1o jeito (q eu pensei)
-    // Graph::Edge e;
-    // e.to = v;
-    // e.weight = weight;
-    // adj[u].push_back(e);
-    
-    // jeito c++ de fazer: 
-    // o emplace back já cria o objeto direto dentro da lista de adjacência e evita criar um objeto temporário.
     adj[u].emplace_back(Graph::Edge{v, weight});
 }
 
-// Retorna a lista de edges de um node
+// Retorna a lista de arestas saindo do nodo u
+// Retorna referência const para evitar cópia e modificação externa
 const std::vector<Graph::Edge>& Graph::neighbours(int u) const {
     return adj[u];
 }
 
-// Retorna quantos nodes nosso grafo tem
+// Retorna número total de nodes do grafo
 int Graph::size() const {
     return adj.size();
 }
 
-// Retorna quantas arestas o grafo tem
+// Retorna o número total de arestas do grafo
 int Graph::totalEdges() const {
     int edges = 0;
 
-    // Em tese isso aqui vai percorrer todos nodes e ir somando o numero de arestas
+    // Percorre todos nodes e vai somando o numero de arestas (tamanho do vetor)
     for(auto& node : adj) {
         edges += node.size();
     }
@@ -154,13 +125,18 @@ int Graph::totalEdges() const {
     return edges;
 }
 
+// Converte um ID externo do JSON em um indíce interno
 int Graph::getIndexFromId(long long id) const {
     return idToIndex.at(id);
 }
 
+// Converte um índice interno do grafo para o id original do JSON
 long long Graph::getIdFromIndex(int idx) const {
     return indexToId.at(idx);
 }
+
+// Retorna a coordenada (lat, lon) do nodo u
+// Retorna (0,0) se o índice for inválido
 Graph::Coordinate Graph::getCoord(int u) const{
     // precaução pra nao acessar memoria invalida
     if (u >= 0 && u < nodeCoords.size()) {
