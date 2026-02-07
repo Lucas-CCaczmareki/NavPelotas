@@ -113,8 +113,8 @@ int main() {
 #include <unordered_map>
 #include "Graph.h"
 #include "trie.h"
-#include "fileModule.h"
-#include "Dijkstra.h"
+#include "./../fileModule/fileModule.h"
+#include "dijkstra.h"
 
 // mapa para busca reversa (id -> nome da rua)
 std::unordered_map<unsigned long long, std::string> idToLabelMap;
