@@ -254,8 +254,8 @@ dijkstra executed.
 
 Algumas interseções esperadas podem não existir nos JSONs. Exemplo:
 
-- ❌ "lobo da costa x goncalves chaves" (não existe)
-- ✅ "lobo da costa x santa cruz" (existe)
+- "lobo da costa x goncalves chaves" (não existe)
+- "lobo da costa x santa cruz" (existe)
 
 ### 2. Saltos inesperados no caminho
 
