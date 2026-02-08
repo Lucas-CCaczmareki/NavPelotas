@@ -111,6 +111,7 @@ int main() {
 #include <string>
 #include <filesystem>
 #include <unordered_map>
+#include <cmath>
 #include "Graph.h"
 #include "trie.h"
 #include "./../fileModule/fileModule.h"
@@ -170,7 +171,7 @@ void printDetailedRoute(Graph* g, const std::vector<Dijkstra::Prev>& path, int d
 }
 
 // interface de busca e seleção via trie
-long long selectLocation(trie::TrieNode* root, const std::string& type) {
+long long selectLocation(trie::TrieNode* root, const std::string& type, long long excludeId = -1) {
     trie::SearchResult results[100];
     int count = 0;
 
@@ -186,15 +187,54 @@ long long selectLocation(trie::TrieNode* root, const std::string& type) {
         }
 
         std::cout << "   encontramos " << count << " opcoes:\n";
-        int limit = (count > 10) ? 10 : count;
+        const int PAGE_MAX_SIZE = 10;
+        int offset = 0;
+        int start = offset;
+        int end = std::min(offset + PAGE_MAX_SIZE, count);
 
-        for (int i = 0; i < limit; i++) {
+        for (int i = start; i < end; i++) {
+            if (results[i].nodeIds[0] == excludeId) continue;
             std::cout << "   [" << i << "] " << results[i].label << "\n";
         }
 
         // loop de selecao
         while (true) {
-            std::string choiceStr = safeReadLine("   >> digite o numero (0-" + std::to_string(limit - 1) + ") ou 'c' para cancelar: ");
+            // aviso de navegação se houver mais de uma página
+            if (count > PAGE_MAX_SIZE) {
+                std::cout << "   [j] página anterior, [k] próxima página, [c] cancelar\n";
+            }
+
+            std::string choiceStr = safeReadLine("   >> digite o numero (0-" + std::to_string(end - 1) + ") ou 'c' para cancelar: ");
+
+            // PAGINAÇÃO -> agora por cli ta usando j e k, mas depois com dropdown de autocomplete da pra mudar pra scroll
+            int isPrevPageButton = choiceStr == "j";
+            int isNextPageButton = choiceStr == "k";
+            if (count > PAGE_MAX_SIZE && (isPrevPageButton || isNextPageButton)) {
+                int newOffset = offset;
+
+                if (isPrevPageButton) newOffset -= PAGE_MAX_SIZE;
+                if (isNextPageButton) newOffset += PAGE_MAX_SIZE;
+
+                // avoid going over the limit
+                if (newOffset < 0) {
+                    std::cout << "   [!] já está na primeira página.\n";
+                    continue;
+                }
+                if (newOffset >= count) {
+                    std::cout << "   [!] já está na última página.\n";
+                    continue;
+                }
+
+                offset = newOffset;
+                end = std::min(offset + PAGE_MAX_SIZE, count);
+
+                for (int i = offset; i < end; i++) {
+                    if (results[i].nodeIds[0] == excludeId) continue;
+                    std::cout << "   [" << i << "] " << results[i].label << "\n";
+                }
+
+                continue;
+            }
 
             // volta para a pesquisa se o usuario desistir
             if (choiceStr == "c" || choiceStr == "cancelar") {
@@ -213,6 +253,28 @@ long long selectLocation(trie::TrieNode* root, const std::string& type) {
             } catch (...) { std::cout << "   [!] digite um numero ou 'c'.\n"; }
         }
     }
+}
+
+std::string formatDistance(double meters) {
+    if (meters < 1000.0) {
+        return std::to_string((int)meters) + " metros";
+    }
+
+    double km = meters / 1000.0;
+    // f mod = % but for double
+    int isKmInt = std::fmod(km, 1.0) == 0.0 ? 1 : 0;
+    if (isKmInt) {
+        return std::to_string((int)km) + " km";
+    }
+
+    km = std::round(km * 10) / 10; // isn't int number, Round to 1 decimal
+    std::string kmString = std::to_string(km); // "5.400000"
+    int dotIndex = kmString.find('.');
+    int endIndex = dotIndex + 2;
+    // kmString.substr(startIdx, charsAfterStartToTake) (so we take from 0 to dot+2)
+    // - lets say dot is index 1: in the string "1.2"
+    // - if we use dot+1 we would get "1.", so we do dot+2: "1.2"
+    return kmString.substr(0, endIndex) + " km";
 }
 
 int main() {
@@ -252,10 +314,10 @@ int main() {
 
     // loop principal
     while(true) {
-        long long originId = selectLocation(root, "ORIGEM");
+        long long originId = selectLocation(root, "ORIGEM", -1);
         if (originId == -1) break;
 
-        long long destId = selectLocation(root, "DESTINO");
+        long long destId = selectLocation(root, "DESTINO", originId);
         if (destId == -1) break;
 
         try {
@@ -272,7 +334,7 @@ int main() {
             if (dist > 1e15) {
                 std::cout << ">>> sem caminho possivel.\n";
             } else {
-                std::cout << ">>> distancia: " << dist << " metros\n";
+                std::cout << ">>> distancia: " << formatDistance(dist)<< "\n";
                 auto path = dj.getPath(v);
                 printDetailedRoute(g, path, v);
             }

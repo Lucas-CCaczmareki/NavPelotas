@@ -86,7 +86,7 @@ namespace trie
       int trieCharIndex = detail::getTrieCharIndex(currCharToInsert);
       if (trieCharIndex == -1)
       {
-        std::cout << "skipping char: " << currCharToInsert << "since it's not supported\n";
+        // std::cout << "skipping char: " << currCharToInsert << "since it's not supported\n";
         continue;
       }
 
@@ -118,7 +118,7 @@ namespace trie
   void search(TrieNode *node, std::string word, SearchResult results[], int *resultsCount)
   {
 
-    std::cout << "searching for " + word + "\n";
+    // std::cout << "searching for " + word + "\n";
     *resultsCount = 0;
 
     TrieNode *currNode = node;
@@ -129,7 +129,7 @@ namespace trie
 
       if (currTrieCharIndex == -1)
       {
-        std::cout << "skipping unsupported char: " << currChar << "\n";
+        // std::cout << "skipping unsupported char: " << currChar << "\n";
         continue;
       }
 

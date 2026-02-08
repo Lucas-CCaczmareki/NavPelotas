@@ -11,6 +11,14 @@
 - 4. compile project: `make -j12` (-j12 is optional to use multiple cpu cores)
 - 5. run project: `./NavPelotas.app/Contents/MacOS/NavPelotas`
 
+## How to run on unix CLI:
+- 1. `g++ -std=c++17 -O2 src/main.cpp src/Graph.cpp src/dijkstra.cpp src/trie.cpp fileModule/fileModule.cpp -Iinclude -o main && ./main`
+
+## How to run with valgrind to check any memory leak
+1. - install docker on oficial website
+2. - Run on terminal: `docker build -t valgrind-runner . && docker run valgrind-runner`
+  - macos doesn't support valgrind so I've to use a docker container for this D:
+
 ## Estrutura do Projeto
 
 ### Arquivos principais

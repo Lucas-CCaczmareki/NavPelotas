@@ -40,12 +40,12 @@ Graph::Graph(const std::string& nodes, const std::string& edges) {
     nodeCoords.reserve(j_file.size());      // reserva memoria pras coordenadas
 
     // Mapeia todos os IDs externos para um índice 
-    // Constrói esse nodo na lista de adjacência
+    // Constrói o "espaço" pra esse nodo na lista de adjacência, sem edges ainda
     for(auto& node : j_file) {
         // Mapeamento ID externo -> índice
         // Motivo: Aumenta eficiência de memória; Evita criar vários vetores vazios para conseguir usar long long no acesso direto
 
-        long long id = node["id"];          // cria um id temporario pra facilitar a escrita
+        long long id = node["id"];          // usa o id do JSON pra facilitar a escrita
 
         // le lat e lon do json
         double lat = node.value("y", 0.0);  // y é a latitude
@@ -58,6 +58,7 @@ Graph::Graph(const std::string& nodes, const std::string& edges) {
         indexToId.push_back(id);            // I -> ID (caminho contrário)
 
         // Cria um nodo diretamente (emplace) dentro da lista de adjacência usando o construtor padrão do vector<Edges>.
+        // nao precisa cirar e copiar um objeto temporario como o push_back faz
         // Vetor de EDGES vazio ainda.
         adj.emplace_back();
         nodeCoords.push_back({lat,lon});    // guarda a coordenada no vetor (mesmo indice i)

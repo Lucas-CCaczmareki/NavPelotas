@@ -1,0 +1,5 @@
+general os
+0
+general os
+1
+sair
