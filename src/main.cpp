@@ -310,6 +310,12 @@ int main() {
         return 1;
     }
 
+    // debug to see if is sparse or dense
+    int V = g->size();
+    int E = g->totalEdges();
+    double density = double(E) / (V * (V - 1)); // https://en.wikipedia.org/wiki/Dense_graph
+    std::cout << "[INFO] vertices=" << V << ", arestas=" << E << ", densidade=" << density << "\n";
+
     std::cout << "\nsistema pronto!\n";
 
     // loop principal

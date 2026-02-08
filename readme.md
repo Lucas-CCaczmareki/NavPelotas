@@ -19,6 +19,30 @@
 2. - Run on terminal: `docker build -t valgrind-runner . && docker run valgrind-runner`
   - macos doesn't support valgrind so I've to use a docker container for this D:
 
+
+## Decisoes e resumos
+
+- O que justifica usar lista de adjacencia nesse caso?
+  - Quando o grafo é esparso é preferivel lista de adjacencia pra economizar memoria e percorrer mais facil os vizinhos.
+  - Quando o grafo é denso é preferivel matriz de adjacencia porque faz acesso em O(1) pra checar se existe aresta entre dois vertices.
+    - **grafo esparso** -> poucas arestas por vértice
+    - **grafo denso** -> quase todas arestas possiveis existem. edges ~= nodes ^2
+  - **Motivo de usar lista de adjacencia**: Ao rodar dijkstra com lista de adjacencia se o grafo é esparso temos O(V+E),
+  e se for matriz de adjacencia teriamos O(V^2) o que é ruim num cenário onde o grafo é esparso, e seria bom caso o grafo fosse denso.
+  - **Esse grafo é esparso porque**: vertices=8185, arestas=39625, densidade=0.000591541
+  - referencias: cormen + https://www.youtube.com/watch?v=jlKzLi16fuo + https://en.wikipedia.org/wiki/Dense_graph
+
+- Motivo pra mapear id pra index e index pra id no grafo?
+  - id pra index -> id é um numero enorme que pode nao ser sequencial, dessa forma ia ter um vector todo bugado
+  - index pra id -> precisamos saber o id original do node (por exemplo, ao mostrar resultados ou buscar o nodo pelo JSON)
+
+- Motivo da logica pra mapear char pra index na trie e pra que aqueles casos especiais de -, etc?
+  - Acessar em O(1) cada char na trie e assim ter o O(n) pra cada string onde n = tamanho da string; E aqueles ifs especificos sao pra suportar os caracteres especiais necessarios nos nome das ruas;
+
+- O que contem cada arquivo?
+  - nodes.json -> cada node é uma esquina no mapa com latitude e longitude
+  - edges.json -> ligacao entre duas esquinas com informacoes de sentido e distancia
+
 ## Estrutura do Projeto
 
 ### Arquivos principais
