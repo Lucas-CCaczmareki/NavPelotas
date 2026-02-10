@@ -123,6 +123,128 @@ Cada entrada representa uma interseção/esquina no grafo.
 
 ---
 
+## Implementação da Trie (Busca por nomes de ruas)
+
+A **Trie** é utilizada para permitir **busca eficiente por nomes de ruas**, suportando **autocompletar** e **mapeamento de múltiplos IDs de nós** associados a uma mesma rua ou interseção.
+
+Ela é usada principalmente para:
+- Buscar ruas pelo **prefixo digitado pelo usuário**
+- Retornar **todas as possíveis interseções** associadas àquele nome
+- Fazer isso em tempo **linear no tamanho da string**
+
+---
+
+### Estrutura da Trie
+
+Cada nó da Trie (`TrieNode`) contém:
+
+- **`char val`**  
+  Caractere armazenado no nó.
+
+- **`TrieNode* next[ACCEPTED_SYMBOLS_AMOUNT]`**  
+  Vetor de ponteiros para os próximos nós.  
+  O índice é calculado diretamente a partir do caractere (acesso O(1)).
+
+- **`bool isEndOfWord`**  
+  Indica se aquele nó representa o final de uma palavra válida.
+
+- **`std::string word`**  
+  Palavra completa associada ao nó final (ex: nome da rua).
+
+- **`unsigned long long* nodeIds`**  
+  Lista dinâmica de IDs de nós do grafo associados àquela palavra.
+
+- **`int nodeIdsSize`**  
+  Quantidade de IDs associados.
+
+---
+
+### Mapeamento de caracteres (char → índice)
+
+Para garantir **acesso O(1)**, cada caractere suportado é mapeado para um índice fixo:
+
+- `'a'` a `'z'` → `0` a `25`
+- `'0'` a `'9'` → `26` a `35`
+- `'-'` → `36`
+- `' '` (espaço) → `37`
+- `'.'` → `38`
+- `'`'` → `39`
+
+Caracteres fora desse conjunto são **ignorados**.
+
+**Motivo**:
+- Evita uso de `map` ou `unordered_map`
+- Garante busca e inserção em **O(n)**, onde `n` é o tamanho da string
+
+---
+
+### Inserção de palavras (`insertWord`)
+
+Ao inserir uma palavra:
+1. Percorre a Trie caractere por caractere
+2. Cria nós quando necessário
+3. No final da palavra:
+   - Marca `isEndOfWord = true`
+   - Armazena a palavra completa
+   - Adiciona o `nodeId` à lista dinâmica de IDs
+
+Isso permite que:
+- Uma mesma rua esteja associada a **vários IDs**
+- Interseções complexas sejam corretamente representadas
+
+---
+
+### Busca (`search`)
+
+A busca funciona em dois cenários:
+
+#### 1. Palavra completa
+Se o usuário digitar exatamente o nome de uma rua:
+- Retorna **um único resultado**
+- Com todos os IDs associados àquela palavra
+
+#### 2. Prefixo
+Se o usuário digitar apenas parte do nome:
+- A Trie percorre até o fim do prefixo
+- Realiza uma **DFS** a partir desse ponto
+- Retorna **todas as palavras possíveis** que completam o prefixo
+
+Há uma **trava de segurança** que limita o retorno a **100 resultados**, evitando explosão de memória ou tempo.
+
+---
+
+### Complexidade
+
+- **Inserção**: `O(n)`
+- **Busca por palavra/prefixo**: `O(n)`
+- Onde `n` é o tamanho da string
+
+A DFS para autocompletar depende da quantidade de resultados possíveis, mas é limitada por segurança.
+
+---
+
+### Liberação de memória (`destroy`)
+
+A Trie é destruída usando **DFS**:
+- Garante que nenhum nó perca referência
+- Libera corretamente:
+  - Nós alocados com `new`
+  - Vetores de IDs alocados com `realloc`
+
+Isso evita **memory leaks** e mantém o uso de memória controlado.
+
+---
+
+### Resumo
+
+- A Trie permite **busca rápida e eficiente** por nomes de ruas
+- Suporta **autocompletar**
+- Trata corretamente **múltiplos IDs por nome**
+- Mantém complexidade linear
+- Evita estruturas mais custosas como mapas ou hashes
+
+
+
 ## Implementação do Dijkstra
 
 ### Classe `Dijkstra`
