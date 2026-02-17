@@ -84,7 +84,7 @@ void processNodesToLabel(trie::TrieNode *trieRoot, void (*cb)(trie::TrieNode *tr
         return;
     }
 
-    std::cout << "Carregando ruas (Modo Leitura Manual)... ";
+    std::cout << "Carregando ruas ";
 
     std::string line;
     int count = 0;

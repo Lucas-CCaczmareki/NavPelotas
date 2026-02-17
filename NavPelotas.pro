@@ -11,6 +11,7 @@ SOURCES += src/main.cpp \
            fileModule/fileModule.cpp
 
 HEADERS += include/Graph.h \
+           include/autocomplete.h \
            include/trie.h \
            include/json.hpp \
            include/dijkstra.h \
