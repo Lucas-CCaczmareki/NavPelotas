@@ -51,8 +51,6 @@ Graph::Graph(const std::string& nodes, const std::string& edges) {
         double lat = node.value("y", 0.0);  // y é a latitude
         double lon = node.value("x", 0.0);  // x é a longitude
 
-
-        
         int i = adj.size();                 // próximo índice i livre = tamanho atual da lista de adjacência (começa em 0)
         idToIndex[id] = i;                  // ID -> I; Ordem igual a do JSON
         indexToId.push_back(id);            // I -> ID (caminho contrário)
