@@ -123,10 +123,10 @@ std::vector<Dijkstra::Prev> Dijkstra::getPath(int destination) const {
     std::reverse(path.begin(), path.end());
 
     // vou fazer ele printar o path só pra testes aqui por enquanto q vai ser mais fácil
-    for(auto& path_node : path) {
+    /*for(auto& path_node : path) {
         std::cout << graph.getIdFromIndex(path_node.node) << ", ";
-    }
-    std::cout << graph.getIdFromIndex(destination) << "\n";
+    }*/
+    //std::cout << graph.getIdFromIndex(destination) << "\n";
 
     return path;
 }

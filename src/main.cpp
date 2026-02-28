@@ -1,113 +1,9 @@
-/*
-// OBS: O main foi feito usando IA pra testar os caminhos por enquanto e conseguir ligar com
-// os múltiplos ids que podem vir da trie
-
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <string>
-#include <limits>
-#include "Graph.h"
-#include "json.hpp"
-#include <unordered_map>
-#include "Dijkstra.h"
-
-int main() {
-    try {
-        Graph g("data/nodes.json", "data/edges.json");
-        
-        // Origem com múltiplos IDs (exemplo: joao gomes nogueira x rotula)
-        std::vector<long long> origem_ids = {1675174988};
-        
-        // Destino com múltiplos IDs (bento goncalves x goncalves chaves)
-        std::vector<long long> destino_ids = {1675174980};
-        
-        // Variáveis para armazenar o melhor resultado global
-        double menor_distancia = std::numeric_limits<double>::max();
-        int melhor_origem_idx = -1;
-        int melhor_destino_idx = -1;
-        long long melhor_origem_id = -1;
-        long long melhor_destino_id = -1;
-        Dijkstra* melhor_dj = nullptr;
-        
-        std::cout << "Testando todas combinações de origem/destino:\n";
-        std::cout << "==============================================\n\n";
-        
-        // Testa todas combinações de origem x destino
-        for (size_t i = 0; i < origem_ids.size(); i++) {
-            try {
-                int o = g.getIndexFromId(origem_ids[i]);
-                
-                // Cria e executa Dijkstra para essa origem
-                Dijkstra* dj = new Dijkstra(g, o);
-                dj->execute();
-                
-                std::cout << "Origem ID " << origem_ids[i] << ":\n";
-                
-                // Testa cada destino
-                for (size_t j = 0; j < destino_ids.size(); j++) {
-                    try {
-                        int d = g.getIndexFromId(destino_ids[j]);
-                        double dist = dj->getDistance(d);
-                        
-                        std::cout << "  -> Destino ID " << destino_ids[j] 
-                                  << ": " << dist << "m\n";
-                        
-                        // Atualiza se for o menor caminho
-                        if (dist < menor_distancia) {
-                            // Deleta o Dijkstra anterior se existir
-                            if (melhor_dj != nullptr && melhor_dj != dj) {
-                                delete melhor_dj;
-                            }
-                            
-                            menor_distancia = dist;
-                            melhor_origem_idx = o;
-                            melhor_destino_idx = d;
-                            melhor_origem_id = origem_ids[i];
-                            melhor_destino_id = destino_ids[j];
-                            melhor_dj = dj;
-                        }
-                    } catch(const std::exception& e) {
-                        std::cout << "  -> Destino ID " << destino_ids[j] 
-                                  << ": ERRO\n";
-                    }
-                }
-                
-                // Se esse Dijkstra não é o melhor, deleta
-                if (dj != melhor_dj) {
-                    delete dj;
-                }
-                
-                std::cout << "\n";
-                
-            } catch(const std::exception& e) {
-                std::cout << "Origem ID " << origem_ids[i] << ": ERRO - " 
-                          << e.what() << "\n\n";
-            }
-        }
-        
-        // Imprime o melhor resultado
-        std::cout << "==============================================\n";
-        std::cout << "MELHOR CAMINHO ENCONTRADO:\n";
-        std::cout << "==============================================\n";
-        std::cout << "Origem ID: " << melhor_origem_id << "\n";
-        std::cout << "Destino ID: " << melhor_destino_id << "\n";
-        std::cout << "Distancia: " << menor_distancia << "m\n\n";
-        std::cout << "Caminho:\n";
-        
-        if (melhor_dj != nullptr) {
-            melhor_dj->getPath(melhor_destino_idx);
-            delete melhor_dj;
-        }
-        
-    } catch(const std::exception& e) {
-        std::cerr << "Erro: " << e.what() << '\n';
-    }
-    
-    return 0;
-}*/
 #include <iostream>
 #include <vector>
+#ifndef _WIN32
+#include <termios.h>
+#include <unistd.h>
+#endif
 #include <string>
 #include <filesystem>
 #include <unordered_map>
@@ -116,9 +12,14 @@ int main() {
 #include "trie.h"
 #include "./../fileModule/fileModule.h"
 #include "dijkstra.h"
+#include "autocomplete.h"
+//#include <limits.h>
 
 // mapa para busca reversa (id -> nome da rua)
 std::unordered_map<unsigned long long, std::string> idToLabelMap;
+
+// Ponteiro global para a trie — necessário porque SearchFn não captura estado
+static trie::TrieNode* g_trieRoot = nullptr;
 
 // callback para popular a trie e o mapa reverso simultaneamente
 // chamada pelo filemodule
@@ -127,21 +28,6 @@ void loadDataCallback(trie::TrieNode* root, std::string label, unsigned long lon
     idToLabelMap[id] = label;
 }
 
-// leitura segura para evitar sujeira no buffer do teclado
-std::string safeReadLine(const std::string& msg) {
-    std::string input;
-    while (true) {
-        std::cout << msg << std::flush;
-        if (std::cin.fail()) std::cin.clear();
-
-        if (!std::getline(std::cin, input)) {
-            std::cout << "\n[!] fim de entrada (eof). encerrando.\n";
-            exit(0);
-        }
-        if (!input.empty() && input.back() == '\r') input.pop_back();
-        if (!input.empty()) return input;
-    }
-}
 
 // imprime a rota agrupando ruas com mesmo nome
 void printDetailedRoute(Graph* g, const std::vector<Dijkstra::Prev>& path, int destIdx) {
@@ -169,89 +55,82 @@ void printDetailedRoute(Graph* g, const std::vector<Dijkstra::Prev>& path, int d
     std::cout << " " << ++step << ". CHEGADA AO DESTINO!\n";
     std::cout << "================================================\n";
 }
+// Adaptador: assinatura deve ser exatamente SearchFn
+std::vector<std::pair<std::string, long long>>
+trieSearch(const std::string& query, int maxResults) {
+    std::vector<std::pair<std::string, long long>> out;
+    if (query.empty() || !g_trieRoot) return out;
 
-// interface de busca e seleção via trie
-long long selectLocation(trie::TrieNode* root, const std::string& type, long long excludeId = -1) {
-    trie::SearchResult results[100];
+    // Reutiliza o array estático que você já tem
+    trie::SearchResult results[200];
     int count = 0;
+    trie::search(g_trieRoot, query, results, &count);
+
+    int limit = std::min(count, maxResults);
+    for (int i = 0; i < limit; i++) {
+        // nodeIds[0] é o primeiro ID associado à label
+        out.push_back({ results[i].label, results[i].nodeIds[0] });
+    }
+    return out;
+}
+// Lê uma tecla s/n do terminal (sem precisar de Enter)
+static char readConfirm() {
+#ifdef _WIN32
+    return (char)_getch();
+#else
+    struct termios oldt, newt;
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);
+    newt.c_cc[VMIN] = 1; newt.c_cc[VTIME] = 0;
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    char c = 0;
+    read(STDIN_FILENO, &c, 1);
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    return c;
+#endif
+}
+
+long long selectLocation(const std::string& type, long long excludeId = -1, bool isDestino = false) {
+    AutocompleteConfig cfg;
+    cfg.prompt     = ">> " + type + ": ";
+    cfg.maxVisible = 8;
 
     while (true) {
-        std::string query = safeReadLine("\n>> digite a " + type + " (ou 'sair'): ");
-        if (query == "sair") return -1;
+        auto res = autocomplete(cfg.prompt, trieSearch, cfg);
 
-        trie::search(root, query, results, &count);
+        if (res.cancelled) {
+            if (isDestino) {
+                std::cout << "tem certeza que deseja cancelar? [s/n] ";
+                std::cout.flush();
+                char c = readConfirm();
+                std::cout << "\n";
+                if (c == 's' || c == 'S') return -1; // volta para origem no loop principal
+                continue; // continua buscando destino
+            } else {
+                std::cout << "tem certeza que deseja sair? [s/n] ";
+                std::cout.flush();
+                char c = readConfirm();
+                std::cout << "\n";
+                if (c == 's' || c == 'S') return -2; // sinal de "sair do programa"
+                continue; // continua buscando origem
+            }
+        }
 
-        if (count == 0) {
-            std::cout << "   [!] nada encontrado. tente outro nome.\n";
+        if (res.id == excludeId) {
+            std::cout << "   [!] origem e destino nao podem ser iguais.\n";
             continue;
         }
 
-        std::cout << "   encontramos " << count << " opcoes:\n";
-        const int PAGE_MAX_SIZE = 10;
-        int offset = 0;
-        int start = offset;
-        int end = std::min(offset + PAGE_MAX_SIZE, count);
-
-        for (int i = start; i < end; i++) {
-            if (results[i].nodeIds[0] == excludeId) continue;
-            std::cout << "   [" << i << "] " << results[i].label << "\n";
+        if (res.id == -1) {
+            std::cout << "   [!] nenhum resultado. tente outro nome.\n";
+            continue;
         }
 
-        // loop de selecao
-        while (true) {
-            // aviso de navegação se houver mais de uma página
-            if (count > PAGE_MAX_SIZE) {
-                std::cout << "   [j] página anterior, [k] próxima página, [c] cancelar\n";
-            }
-
-            std::string choiceStr = safeReadLine("   >> digite o numero (0-" + std::to_string(end - 1) + ") ou 'c' para cancelar: ");
-
-            // PAGINAÇÃO -> agora por cli ta usando j e k, mas depois com dropdown de autocomplete da pra mudar pra scroll
-            int isPrevPageButton = choiceStr == "j";
-            int isNextPageButton = choiceStr == "k";
-            if (count > PAGE_MAX_SIZE && (isPrevPageButton || isNextPageButton)) {
-                int newOffset = offset;
-
-                if (isPrevPageButton) newOffset -= PAGE_MAX_SIZE;
-                if (isNextPageButton) newOffset += PAGE_MAX_SIZE;
-
-                // avoid going over the limit
-                if (newOffset < 0) {
-                    std::cout << "   [!] já está na primeira página.\n";
-                    continue;
-                }
-                if (newOffset >= count) {
-                    std::cout << "   [!] já está na última página.\n";
-                    continue;
-                }
-
-                offset = newOffset;
-                end = std::min(offset + PAGE_MAX_SIZE, count);
-
-                for (int i = offset; i < end; i++) {
-                    if (results[i].nodeIds[0] == excludeId) continue;
-                    std::cout << "   [" << i << "] " << results[i].label << "\n";
-                }
-
-                continue;
-            }
-
-            // volta para a pesquisa se o usuario desistir
-            if (choiceStr == "c" || choiceStr == "cancelar") {
-                std::cout << "   [!] selecao cancelada.\n";
-                break;
-            }
-
-            try {
-                int choice = std::stoi(choiceStr);
-                if (choice >= 0 && choice < count) {
-                    long long id = results[choice].nodeIds[0];
-                    std::cout << "   -> selecionado: " << results[choice].label << "\n";
-                    return id;
-                }
-                std::cout << "   [!] numero invalido.\n";
-            } catch (...) { std::cout << "   [!] digite um numero ou 'c'.\n"; }
-        }
+        std::cout << cfg.colorHighlight << cfg.prompt << cfg.colorNormal
+                  << res.label << "\n";
+        std::cout.flush();
+        return res.id;
     }
 }
 
@@ -303,6 +182,7 @@ int main() {
     // carrega a trie e o mapa
     std::cout << "[2/2] indexando ruas... ";
     trie::TrieNode* root = trie::init();
+    g_trieRoot = root;
     try {
         fileModule::processNodesToLabel(root, loadDataCallback);
     } catch (...) {
@@ -320,11 +200,12 @@ int main() {
 
     // loop principal
     while(true) {
-        long long originId = selectLocation(root, "ORIGEM", -1);
-        if (originId == -1) break;
+        long long originId = selectLocation("ORIGEM", -1);
+        if (originId == -2) break;
 
-        long long destId = selectLocation(root, "DESTINO", originId);
-        if (destId == -1) break;
+        long long destId = selectLocation("DESTINO", originId,true);
+
+        if (destId == -1) continue;
 
         try {
             int u = g->getIndexFromId(originId);
